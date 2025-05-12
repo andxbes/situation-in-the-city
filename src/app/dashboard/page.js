@@ -5,11 +5,8 @@ function Page(params) {
     const { data: session } = useSession();
     return (
         <>
-
-            chat
-
             <div>
-                <h1>Личный кабинет</h1>
+                <h1>Dashboard</h1>
                 <p>Добро пожаловать, {session?.user?.email}!</p>
                 <button onClick={() => signOut()}>Выйти</button>
             </div>
@@ -20,4 +17,4 @@ function Page(params) {
 
 
 
-export default withRoleAuth(Page, []);
+export default withRoleAuth(Page, ['admin']);

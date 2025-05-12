@@ -1,45 +1,39 @@
 'use client'
-import { FormEvent } from 'react'
+import { useState } from 'react';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 // import { useRouter } from 'next/router'
 
 export default function LoginPage() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const router = useRouter();
     // const router = useRouter()
 
-    async function handleSubmit(event) {
-        event.preventDefault()
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setError('');
 
-        const formData = new FormData(event.currentTarget)
-        const email = formData.get('email')
-        const password = formData.get('password')
+        const result = await signIn('credentials', {
+            redirect: false,
+            email,
+            password,
+        });
 
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        })
+        // console.info('submit', result);
 
-        if (response.ok) {
-            // router.push('/profile')
+        if (result?.error) {
+            setError(result.error);
         } else {
-            // Handle errors
+            router.push('/dashboard'); // Перенаправляем на защищенную страницу после логина
         }
     }
 
     return (
-        // <form onSubmit={handleSubmit}>
-        //     <input type="email" name="email" placeholder="Email" required />
-        //     <input type="password" name="password" placeholder="Password" required />
-        //     <button type="submit">Login</button>
-        // </form>
-        <>
-            {/*
-        This example requires updating your template:
 
-        ```
-        <html class="h-full bg-gray-50">
-        <body class="h-full">
-        ```
-      */}
+        <>
+
             <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
                     <img
@@ -54,7 +48,7 @@ export default function LoginPage() {
 
                 <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
                     <div className="bg-white dark:bg-orange-900 px-6 py-12 shadow-sm sm:rounded-lg sm:px-12">
-                        <form action="#" method="POST" className="space-y-6" onSubmit={handleSubmit}>
+                        <form method="POST" className="space-y-6" onSubmit={handleSubmit}>
                             <div>
                                 <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900  dark:text-amber-300">
                                     Email address
@@ -64,6 +58,8 @@ export default function LoginPage() {
                                         id="email"
                                         name="email"
                                         type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
                                         required
                                         autoComplete="email"
                                         className="block w-full rounded-md bg-white dark:bg-amber-200 px-3 py-1.5 text-base text-gray-900 dark:text-amber-300 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
@@ -80,6 +76,8 @@ export default function LoginPage() {
                                         id="password"
                                         name="password"
                                         type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
                                         required
                                         autoComplete="current-password"
                                         className="block w-full rounded-md bg-white dark:bg-amber-200 px-3 py-1.5 text-base text-gray-900 dark:text-amber-300 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
@@ -191,8 +189,11 @@ export default function LoginPage() {
                                     <span className="text-sm/6 font-semibold">GitHub</span>
                                 </a>
                             </div>
+
                         </div>
+
                     </div>
+                    {error && <p className='my-4 text-orange-700'>{error}</p>}
                 </div>
             </div>
         </>
