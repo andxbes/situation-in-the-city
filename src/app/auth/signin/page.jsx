@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 // import { useRouter } from 'next/router'
 
 export default function LoginPage() {
@@ -26,7 +27,7 @@ export default function LoginPage() {
         if (result?.error) {
             setError(result.error);
         } else {
-            router.push('/dashboard'); // Перенаправляем на защищенную страницу после логина
+            router.push('/dashboard');
         }
     }
 
@@ -36,10 +37,11 @@ export default function LoginPage() {
 
             <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                    <img
+                    <Image
                         alt="Your Company"
-                        src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-                        className="mx-auto h-10 w-auto"
+                        src="/logo.svg"
+                        className="mx-auto h-40 w-auto"
+                        width="160" height="160"
                     />
                     <h2 className="mt-6 text-center text-2xl/9 font-bold tracking-tight text-gray-900 dark:text-amber-300">
                         Sign in to your account
@@ -123,8 +125,8 @@ export default function LoginPage() {
                                 </div>
 
                                 <div className="text-sm/6">
-                                    <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-cyan-400">
-                                        Forgot password?
+                                    <a href="/auth/signup/" className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-cyan-400">
+                                        Register
                                     </a>
                                 </div>
                             </div>
@@ -134,7 +136,7 @@ export default function LoginPage() {
                                     type="submit"
                                     className="flex w-full cursor-pointer justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                                 >
-                                    Sign in
+                                    Sign In
                                 </button>
                             </div>
                         </form>

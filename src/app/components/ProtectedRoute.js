@@ -14,7 +14,7 @@ const withRoleAuth = (WrappedComponent, allowedRoles) => {
             if (status === 'loading') return;
 
             if (status === 'unauthenticated') {
-                router.push('/c-login');
+                router.push('/auth/signin');
             } else if (allowedRoles && !allowedRoles.includes(session?.user?.role)) {
                 router.push('/unauthorized');
             }
