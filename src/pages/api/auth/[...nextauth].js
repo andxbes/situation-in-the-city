@@ -49,6 +49,6 @@ export default NextAuth({
         },
     },
     pages: {
-        signIn: '/c-login', // Ваша страница логина
+        signIn: '/auth/signin',
     },
 });

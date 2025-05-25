@@ -1,3 +1,4 @@
+'use server'
 // database/db.js
 import Database from 'better-sqlite3';
 import bcrypt from 'bcryptjs';
@@ -38,6 +39,32 @@ export const getOne = (sql, params = []) => {
     }
 };
 
+export const addUser = (data) => {
+
+    data = {
+        ...{
+            'email': '',
+            'password': '',
+            'role': 'subscriber'
+        },
+        ...data
+    };
+
+    const { email, password, role } = data;
+
+    if (email.length == 0 || !email.includes('@')) {
+        throw Error('Wrong Email');
+    }
+
+    if (password.length < 6) {
+        throw Error('Wrong Password');
+    }
+
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
+    execute('INSERT INTO users (email, password, role) VALUES (?, ?, ?)', [email, hashedPassword, role]);
+}
+
 // Инициализация базы данных и создание таблицы users, если ее нет
 export const initializeDatabase = () => {
     execute(`
@@ -56,9 +83,13 @@ export const initializeDatabase = () => {
     if (adminCount === 0) {
         const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
         const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-        const hashedPassword = bcrypt.hashSync(adminPassword, 10);
         try {
-            execute('INSERT INTO users (email, password, role) VALUES (?, ?, ?)', [adminEmail, hashedPassword, 'admin']);
+            addUser({
+                'email': adminEmail,
+                'password': adminPassword,
+                'role': 'admin'
+            });
+            // execute('INSERT INTO users (email, password, role) VALUES (?, ?, ?)', [adminEmail, hashedPassword, 'admin']);
             console.log('Создан первый пользователь-администратор.');
         } catch (error) {
             console.error('Ошибка при создании первого администратора:', error);

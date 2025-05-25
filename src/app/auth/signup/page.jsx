@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import AuthForm from '@/app/components/authForm';
-// import { useRouter } from 'next/router'
 
 export default function LoginPage() {
     const router = useRouter();
@@ -22,11 +21,25 @@ export default function LoginPage() {
             errors.push('You mast provide a password with at least six characters');
         }
 
-        //TODO 
-        const result = { error: 'TODO' }
+        try {
+            const response = await fetch('/api/user/', {
+                'method': 'POST',
+                'headers': {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email, password
+                })
+            });
 
-        if (result?.error) {
-            errors.push(result.error)
+            const body = await response.json();
+
+            if (!response.ok || response.status !== 201) {
+                throw new Error(body.message);
+            }
+
+        } catch (error) {
+            errors.push(error.message || 'Error creating user');
         }
 
         if (errors.length > 0) {
@@ -38,7 +51,7 @@ export default function LoginPage() {
                 }
             }
         } else {
-            router.push('/dashboard');
+            router.push('/auth/signin');
         }
         return { errors: null };
     }
