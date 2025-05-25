@@ -7,7 +7,6 @@ export default function handler(req, res) {
 
         const { email, password } = req.body;
         try {
-            console.info(email, password);
             addUser({
                 'email': email,
                 'password': password
@@ -15,7 +14,6 @@ export default function handler(req, res) {
 
             res.status(201).json({ message: `Create new user: ${email}` });
         } catch (error) {
-            console.info(error);
             res.status(500).json({ message: 'Error creating user' });
         }
     } else {
