@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { execute, getOne } from './db';
 
 
-export const addUser = (data) => {
+export function addUser(data) {
 
     data = {
         ...{
