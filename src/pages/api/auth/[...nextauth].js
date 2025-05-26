@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
-import { getOne, execute } from '../../../database/db';
+import { getUserByEmail } from '@/database/user';
 
 export default NextAuth({
     providers: [
@@ -10,7 +10,7 @@ export default NextAuth({
             async authorize(credentials) {
                 const { email, password } = credentials;
 
-                const user = getOne('SELECT id, email, password, role FROM users WHERE email = ?', [email]);
+                const user = getUserByEmail(email);
 
                 if (!user) {
                     return null;

@@ -1,4 +1,5 @@
-import { addUser } from "@/database/db";
+import { addUser } from "@/database/user";
+
 
 export default function handler(req, res) {
     if (req.method === 'GET') {

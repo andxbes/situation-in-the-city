@@ -8,7 +8,6 @@ const withRoleAuth = (WrappedComponent, allowedRoles) => {
     const Wrapper = (props) => {
         const { data: session, status } = useSession();
         const router = useRouter();
-        const isAdmin = session?.user?.role === 'admin';
 
         useEffect(() => {
             if (status === 'loading') return;
