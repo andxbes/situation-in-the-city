@@ -1,7 +1,8 @@
 'use client'
-import { useActionState, useState } from 'react';
+import Image from 'next/image';
+import { useActionState } from 'react';
 
-export default function AuthForm({ handleSubmit, textButton, children, link }) {
+export default function AuthForm({ handleSubmit, textButton, children, changeFormHandle, changeFormLabel, title }) {
 
     const [formState, formAction] = useActionState(handleSubmit, { errors: null });
 
@@ -9,8 +10,17 @@ export default function AuthForm({ handleSubmit, textButton, children, link }) {
 
         <>
 
-            <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
+            <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                    <Image
+                        alt="Situation in the city"
+                        src="/logo.svg"
+                        className="mx-auto h-40 w-auto"
+                        width="160" height="160"
+                    />
+                    <h2 className="mt-6 text-center text-2xl/9 font-bold tracking-tight text-gray-900 dark:text-amber-300">
+                        {title}
+                    </h2>
                     {children}
                 </div>
 
@@ -89,7 +99,7 @@ export default function AuthForm({ handleSubmit, textButton, children, link }) {
                                 </div>
 
                                 <div className="text-sm/6">
-                                    {link}
+                                    <span onClick={changeFormHandle} className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-cyan-400">{changeFormLabel}</span>
                                 </div>
                             </div>
 
