@@ -17,10 +17,10 @@ const withRoleAuth = (WrappedComponent, allowedRoles) => {
             } else if (allowedRoles && !allowedRoles.includes(session?.user?.role)) {
                 router.push('/unauthorized');
             }
-        }, [session, status, router, allowedRoles]);
+        }, [session, status, router]);
 
         if (status === 'loading') {
-            return <div>Загрузка...</div>;
+            return <div>Loading...</div>;
         }
 
         if (status === 'unauthenticated' || (allowedRoles && !allowedRoles.includes(session?.user?.role))) {
