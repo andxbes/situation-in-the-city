@@ -19,7 +19,7 @@ const withRoleAuth = (WrappedComponent, allowedRoles) => {
             if (status === 'authenticated' && allowedRoles && !allowedRoles.includes(session?.user?.role)) {
                 router.push('/unauthorized');
             }
-        }, [session, status, router, allowedRoles]);
+        }, [session, status, router]);
 
         if (status === 'loading') {
             return <div>Loading...</div>;
