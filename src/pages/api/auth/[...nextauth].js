@@ -3,7 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { getUserByEmail } from '@/database/user';
 
-export default NextAuth({
+export const authOptions = {
     providers: [
         CredentialsProvider({
             name: 'Credentials',
@@ -51,4 +51,6 @@ export default NextAuth({
     pages: {
         signIn: '/auth/',
     },
-});
+};
+
+export default NextAuth(authOptions);
