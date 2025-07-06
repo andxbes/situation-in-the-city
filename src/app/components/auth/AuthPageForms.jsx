@@ -94,7 +94,7 @@ export default function AuthPageForms() {
                 }
             }
         } else {
-            router.push('/auth/');
+            handleChangeForm();
         }
         return { errors: null };
     }
