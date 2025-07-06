@@ -3,6 +3,9 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import AuthPageForms from './auth/AuthPageForms';
+
+
 
 const withRoleAuth = (WrappedComponent, allowedRoles) => {
     const Wrapper = (props) => {
@@ -12,22 +15,26 @@ const withRoleAuth = (WrappedComponent, allowedRoles) => {
         useEffect(() => {
             if (status === 'loading') return;
 
-            if (status === 'unauthenticated') {
-                router.push('/auth/');
-            } else if (allowedRoles && !allowedRoles.includes(session?.user?.role)) {
+            // Redirect if authenticated but role is not allowed
+            if (status === 'authenticated' && allowedRoles && !allowedRoles.includes(session?.user?.role)) {
                 router.push('/unauthorized');
             }
-        }, [session, status, router]);
+        }, [session, status, router, allowedRoles]);
 
         if (status === 'loading') {
             return <div>Loading...</div>;
         }
 
-        if (status === 'unauthenticated' || (allowedRoles && !allowedRoles.includes(session?.user?.role))) {
-            return null;
+        if (status === 'unauthenticated') {
+            return <AuthPageForms />;
         }
 
-        return <WrappedComponent {...props} />;
+        if (status === 'authenticated') {
+            if (allowedRoles && !allowedRoles.includes(session?.user?.role)) {
+                return null; // Waiting for redirect to /unauthorized
+            }
+            return <WrappedComponent {...props} />;
+        }
     };
 
     return Wrapper;
