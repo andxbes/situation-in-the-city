@@ -51,7 +51,7 @@ export default async function handler(req, res) {
                 return {
                     id: msg.id,
                     message: msg.message,
-                    date: getformatTime(msg.date), // Отправляем timestamp, клиент сам отформатирует
+                    date: getformatTime(msg.date),
                     replyTo: replyTo,
                 };
             });
