@@ -24,3 +24,33 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@layer utilities {
+  /* Стили для Webkit-браузеров (Chrome, Safari, Edge) */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply rounded-lg bg-gray-200 dark:bg-gray-900;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply rounded-lg bg-gray-400 dark:bg-gray-600;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500 dark:bg-gray-500;
+  }
+
+  /* Стили для Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: theme("colors.gray.400") theme("colors.gray.200");
+  }
+
+  .dark .custom-scrollbar {
+    scrollbar-color: theme("colors.gray.600") theme("colors.gray.900");
+  }
+}
