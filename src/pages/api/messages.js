@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
 import { getMessagesForPeriod } from "../../tg/tclient";
-import { filter_messages } from "../../utils/utils";
+import { filter_messages, getformatTime } from "../../utils/utils";
 
 export default async function handler(req, res) {
     const session = await getServerSession(req, res, authOptions);
@@ -17,6 +17,8 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
         try {
+            const startTime = Date.now();
+
             // Получаем 'hours' из параметров запроса, по умолчанию 1 час, если не указано.
             const hours = parseInt(req.query.hours, 10) || 1;
 
@@ -29,8 +31,42 @@ export default async function handler(req, res) {
             // Фильтруем сообщения по ключевым словам и правилам.
             const filteredMessages = filter_messages(allMessages);
 
+            // Преобразуем сообщения для ответа, добавляя информацию об ответах.
+            // Это аналог вашей логики из sendAnswer.
+            const processedMessages = filteredMessages.map(msg => {
+                const replyToMsgId = msg.replyTo?.replyToMsgId;
+                let replyTo = null;
+
+                if (replyToMsgId) {
+                    const replyMsg = allMessages.find(obj => obj.id === replyToMsgId);
+                    if (replyMsg) {
+                        replyTo = {
+                            id: replyMsg.id,
+                            message: replyMsg.message,
+                            date: getformatTime(replyMsg.date),
+                        };
+                    }
+                }
+
+                return {
+                    id: msg.id,
+                    message: msg.message,
+                    date: getformatTime(msg.date), // Отправляем timestamp, клиент сам отформатирует
+                    replyTo: replyTo,
+                };
+            });
+
+            const endTime = Date.now();
+
             // Отправляем отфильтрованные сообщения в ответе.
-            res.status(200).json({ messages: filteredMessages });
+            res.status(200).json({
+                messages: processedMessages,
+                meta: {
+                    totalFound: allMessages.length,
+                    filteredCount: filteredMessages.length,
+                    processingTimeMs: endTime - startTime,
+                }
+            });
         } catch (error) {
             console.error('Error fetching or filtering messages:', error);
             res.status(500).json({ message: "An error occurred while fetching messages." });
