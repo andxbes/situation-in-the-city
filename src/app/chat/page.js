@@ -95,7 +95,7 @@ function ChatPage() {
                     </div>
                 </header>
 
-                <main className="custom-scrollbar flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800">
+                <main className="custom-scrollbar flex-1 lg:w-3xl max-w-full overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800">
                     {loading && <div className="flex justify-center items-center h-full"><div className="text-gray-500 dark:text-gray-400">Загрузка сообщений...</div></div>}
                     {error && <div className="flex justify-center items-center h-full"><div className="text-center text-red-500 bg-red-100 dark:bg-red-900/20 dark:text-red-300 p-3 rounded-md">Ошибка: {error}</div></div>}
 
@@ -107,10 +107,10 @@ function ChatPage() {
                                         <div className="bg-blue-100 dark:bg-blue-900/50 rounded-lg p-3 max-w-xl">
                                             {msg.replyTo && (
                                                 <div className="border-l-2 border-blue-300 dark:border-blue-700 pl-2 mb-2 text-xs text-gray-600 dark:text-gray-400">
-                                                    <p className="italic line-clamp-2">{msg.replyTo.message}</p>
+                                                    <p className="italic text-left line-clamp-2">{msg.replyTo.message}</p>
                                                 </div>
                                             )}
-                                            <p className="text-sm text-gray-800 dark:text-gray-200">{msg.message}</p>
+                                            <p className="text-sm text-left text-gray-800 dark:text-gray-200">{msg.message}</p>
                                             <div className="text-right text-xs text-gray-500 dark:text-gray-400 mt-1">{msg.date}</div>
                                         </div>
                                     </div>
