@@ -1,12 +1,8 @@
 const { TelegramClient } = require("telegram");
 const { StringSession } = require("telegram/sessions");
 const readline = require("readline");
-// const dotenv = require("dotenv");
 const { debounce } = require("../utils/utils");
-// const dotenvConf = dotenv.config();
-// if (dotenvConf.error) {
-//     throw dotenvConf.error;
-// }
+
 
 const yesterday = parseInt((Date.now() / 1000) - (24 * 60 * 60));
 
