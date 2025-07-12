@@ -1,12 +1,17 @@
-const md5 = require('js-md5');
-
-function debounce(fn, waitTime) {
+/**
+ * Debounces an async function, caches results, and coalesces concurrent calls.
+ *
+ * @param {Function} func The async function to debounce.
+ * @param {number} waitTime The duration in ms to cache the result.
+ * @returns {Function} The new debounced function.
+ */
+function debounce(func, waitTime) {
     let cache = new Map();
     let isUpdating = false;
     let pendingCalls = [];
 
     return async function (...args) {
-        const key = md5(args);
+        const key = JSON.stringify(args);
         const now = Date.now();
 
         if (cache.has(key) && (now - cache.get(key).time) < waitTime) {
@@ -14,25 +19,25 @@ function debounce(fn, waitTime) {
         }
 
         if (isUpdating) {
-            return new Promise((resolve) => {
-                pendingCalls.push({ args, resolve });
-            });
+            return new Promise((resolve) => pendingCalls.push({ args, resolve }));
         }
 
         isUpdating = true;
 
-        const result = await fn(...args);
-        cache.set(key, { result, time: now });
+        try {
+            const result = await func(...args);
+            cache.set(key, { result, time: now });
 
-        for (const { args, resolve } of pendingCalls) {
-            const cachedResult = cache.get(md5(args));
-            resolve(cachedResult ? cachedResult.result : result);
+            for (const { args: pendingArgs, resolve } of pendingCalls) {
+                const pendingKey = JSON.stringify(pendingArgs);
+                const cachedResult = cache.get(pendingKey);
+                resolve(cachedResult ? cachedResult.result : result);
+            }
+            return result;
+        } finally {
+            pendingCalls = [];
+            isUpdating = false;
         }
-        pendingCalls = [];
-
-        isUpdating = false;
-
-        return result;
     };
 }
 
