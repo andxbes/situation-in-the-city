@@ -3,9 +3,6 @@ const { StringSession } = require("telegram/sessions");
 const readline = require("readline");
 const { debounce } = require("../utils/utils");
 
-
-const yesterday = parseInt((Date.now() / 1000) - (24 * 60 * 60));
-
 const stringSession = new StringSession(process.env.API_T_SESSION); // fill this later with the value from session.save()
 
 const rl = readline.createInterface({
@@ -59,17 +56,15 @@ async function getAvailableChanel() {
 
 let cache = new Map();
 function removeOldMessages() {
-
-    cache.forEach((chat, index) => {
+    const yesterday = parseInt((Date.now() / 1000) - (24 * 60 * 60));
+    cache.forEach((chat, chatId) => {
         const old_length = chat.length;
-        chat = chat.filter(message => {
+        const updatedChat = chat.filter(message => {
             return message.date >= yesterday;
         });
-        console.log(`Updated cache ${index} , removed : ${old_length - chat.length}`);
-        return chat;
+        cache.set(chatId, updatedChat);
+        console.log(`Updated cache ${chatId}, removed: ${old_length - updatedChat.length}`);
     })
-
-
 }
 setInterval(removeOldMessages, 60 * 60 * 1000);
 
@@ -107,6 +102,7 @@ async function getMessagesFromChatCached(chatId) {
 }
 
 async function getMessagesFromChat(chatId, lastMessage = null) {
+    const yesterday = parseInt((Date.now() / 1000) - (24 * 60 * 60));
     const chat = await client.getEntity(chatId);
     const limit = 100;
     let offsetId = 0;
@@ -117,8 +113,7 @@ async function getMessagesFromChat(chatId, lastMessage = null) {
             offsetId: offsetId,
         });
 
-        if (messages.length === 0
-            || (messages.length > 0 && messages[0].date < yesterday)) {
+        if (messages.length === 0 || (messages.length > 0 && messages[messages.length - 1].date < yesterday)) {
             break;
         }
 
