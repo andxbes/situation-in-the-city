@@ -61,10 +61,6 @@ async function getAvailableChanel() {
     });
 }
 
-
-const chatId = -1001746152256;
-
-
 let cache = new Map();
 function removeOldMessages() {
 
@@ -85,9 +81,6 @@ setInterval(removeOldMessages, 60 * 60 * 1000);
 async function getMessagesForPeriod(fromTime) {
     const chatNezlamnosti = await debouncedGetMessages(-1001746152256);
     const yamiTuchi = await debouncedGetMessages(-1001886888533);
-
-    // const chatNezlamnosti = await getMessagesFromChatCached(-1001746152256);
-    // const yamiTuchi = await getMessagesFromChatCached(-1001886888533);
 
     const mergedArray = [...chatNezlamnosti, ...yamiTuchi];
     mergedArray.sort((a, b) => a.date - b.date);
