@@ -2,9 +2,9 @@ import bcrypt from 'bcryptjs';
 import { execute, getOne } from './db';
 
 
-export function addUser(data) {
+export async function addUser(data) {
 
-    data = {
+    const userData = {
         ...{
             'email': '',
             'password': '',
@@ -13,7 +13,7 @@ export function addUser(data) {
         ...data
     };
 
-    const { email, password, role } = data;
+    const { email, password, role } = userData;
 
     if (email.length == 0 || !email.includes('@')) {
         throw Error('Wrong Email');
@@ -23,7 +23,7 @@ export function addUser(data) {
         throw Error('Wrong Password');
     }
 
-    const hashedPassword = bcrypt.hashSync(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     execute('INSERT INTO users (email, password, role) VALUES (?, ?, ?)', [email, hashedPassword, role]);
 }
@@ -35,7 +35,7 @@ export const getUserByEmail = (email) => {
 
 
 // Инициализация базы данных и создание таблицы users, если ее нет
-export const initializeDatabase = () => {
+export const initializeDatabase = async () => {
     execute(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +53,7 @@ export const initializeDatabase = () => {
         const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
         const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
         try {
-            addUser({
+            await addUser({
                 'email': adminEmail,
                 'password': adminPassword,
                 'role': 'admin'
