@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { execute, getOne } from './db';
+import { execute, getOne, query } from './db';
 
 
 export async function addUser(data) {
@@ -27,6 +27,17 @@ export async function addUser(data) {
 
     execute('INSERT INTO users (email, password, role) VALUES (?, ?, ?)', [email, hashedPassword, role]);
 }
+
+
+export const getAllUsers = () => {
+    // Исключаем хэш пароля из результата
+    return query('SELECT id, email, role FROM users');
+};
+
+export const updateUserRole = (id, role) => {
+    return execute('UPDATE users SET role = ? WHERE id = ?', [role, id]);
+};
+
 
 
 export const getUserByEmail = (email) => {
