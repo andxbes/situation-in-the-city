@@ -2,6 +2,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import withRoleAuth from '../components/ProtectedRoute';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 function Page() {
     const { data: session } = useSession();
@@ -68,7 +69,7 @@ function Page() {
 
             <hr style={{ margin: '20px 0' }} />
 
-            <h2>{isAdmin ? "Управление пользователями" : "Информация о вашем аккаунте"}</h2>
+            <h2 className='mb-4 font-bold text-3xl'>{isAdmin ? "Управление пользователями" : "Информация о вашем аккаунте"}</h2>
 
             {isAdmin ? (
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -97,9 +98,12 @@ function Page() {
                 </table>
             ) : (
                 users.length > 0 && (
-                    <div>
+                    <div className='flex flex-col gap-4'>
                         <p><strong>Email:</strong> {users[0].email}</p>
                         <p><strong>Роль:</strong> {users[0].role}</p>
+                        <p>
+                            <Link className='px-5 py-3 text-sm font-medium text-center text-white bg-blue-700 rounded-lg cursor-pointer hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800' href="/chat">Chat</Link>
+                        </p>
                     </div>
                 )
             )}
