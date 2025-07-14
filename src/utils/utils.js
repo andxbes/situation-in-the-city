@@ -6,38 +6,35 @@
  * @returns {Function} The new debounced function.
  */
 function debounce(func, waitTime) {
-    let cache = new Map();
-    let isUpdating = false;
-    let pendingCalls = [];
+    const cache = new Map();
+    const ongoingRequests = new Map(); // Map<key, Promise>
 
     return async function (...args) {
         const key = JSON.stringify(args);
         const now = Date.now();
 
+        // 1. Check cache for fresh data that is not expired
         if (cache.has(key) && (now - cache.get(key).time) < waitTime) {
             return cache.get(key).result;
         }
 
-        if (isUpdating) {
-            return new Promise((resolve) => pendingCalls.push({ args, resolve }));
+        // 2. Check if a request for the same key is already in flight
+        if (ongoingRequests.has(key)) {
+            return ongoingRequests.get(key);
         }
 
-        isUpdating = true;
-
-        try {
-            const result = await func(...args);
-            cache.set(key, { result, time: now });
-
-            for (const { args: pendingArgs, resolve } of pendingCalls) {
-                const pendingKey = JSON.stringify(pendingArgs);
-                const cachedResult = cache.get(pendingKey);
-                resolve(cachedResult ? cachedResult.result : result);
-            }
+        // 3. Create a new request promise
+        const requestPromise = func(...args).then(result => {
+            cache.set(key, { result, time: Date.now() });
+            ongoingRequests.delete(key);
             return result;
-        } finally {
-            pendingCalls = [];
-            isUpdating = false;
-        }
+        }).catch(error => {
+            ongoingRequests.delete(key);
+            throw error; // Re-throw to the caller
+        });
+
+        ongoingRequests.set(key, requestPromise);
+        return requestPromise;
     };
 }
 
