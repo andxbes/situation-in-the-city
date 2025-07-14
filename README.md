@@ -35,13 +35,13 @@ proot-distro login ubuntu
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 exit
 proot-distro login ubuntu
+apt update 
+apt install libatomic1
+apt install libstdc++6 
 nvm install 22
 
 git clone https://github.com/andxbes/situation-in-the-city.git 
 cd situation-in-the-city
-apt update 
-apt install libatomic1
-apt install libstdc++6 
 
 npm i 
 nano .env 
