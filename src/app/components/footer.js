@@ -15,16 +15,10 @@ export default function Footer(params) {
                     <div className="flex items-center mt-3 md:mt-0">
                         <ul className="flex flex-wrap items-center text-sm font-medium text-gray-500 dark:text-gray-400">
                             <li>
-                                <a href="#" className="hover:underline me-4 md:me-6">About</a>
+                                <Link className='"hover:underline me-4 md:me-6' href="/dashboard">Dashboard</Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:underline me-4 md:me-6">Privacy Policy</a>
-                            </li>
-                            <li>
-                                <a href="#" className="hover:underline me-4 md:me-6">Licensing</a>
-                            </li>
-                            <li>
-                                <a href="#" className="hover:underline">Contact</a>
+                                <Link className='"hover:underline me-4 md:me-6' href="/chat">Chat</Link>
                             </li>
                         </ul>
                         {status === 'authenticated' && (
