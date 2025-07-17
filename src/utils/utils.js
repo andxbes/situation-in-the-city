@@ -86,7 +86,7 @@ const POSITIVE_WORDS = [
     'воины[\\s]+добра',
 ];
 
-const NEGATIVE_KEYWORDS = new Set(['?', 'съебётся']);
+const NEGATIVE_KEYWORDS = new Set(['?', '¿', 'съебётся']);
 const NEGATIVE_WORDS = [
     'бля', 'желательно', 'а какой', 'в ахуе', 'пох',
     'если', 'чево', 'чего', 'шотак', 'нахуй', 'блэт',
