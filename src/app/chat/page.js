@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import withRoleAuth from '../components/ProtectedRoute';
 
 function ChatPage() {
     const [messages, setMessages] = useState([]);
+    const [isAtBottom, setIsAtBottom] = useState(true);
     const [meta, setMeta] = useState(null);
     const [hours, setHours] = useState(1);
     const [loading, setLoading] = useState(true);
@@ -12,6 +13,7 @@ function ChatPage() {
 
     const fetchMessages = useCallback(async (isInterval = false) => {
         if (!isInterval) {
+
             setLoading(true);
         }
         setError(null);
@@ -33,6 +35,20 @@ function ChatPage() {
         }
     }, [hours]);
 
+    const scrollRef = useRef(null);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            if (isAtBottom) {
+                scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            }
+        }
+    }, [messages, isAtBottom]);
+
+    const handleScroll = useCallback(() => {
+        const element = scrollRef.current;
+        setIsAtBottom(element.scrollHeight - element.scrollTop === element.clientHeight);
+    }, []);
     // Первоначальная загрузка и загрузка при изменении часов
     useEffect(() => {
         fetchMessages();
@@ -95,8 +111,12 @@ function ChatPage() {
                     </div>
                 </header>
 
-                <main className="custom-scrollbar flex-1 lg:w-3xl max-w-full overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800">
-                    {loading && <div className="flex justify-center items-center h-full"><div className="text-gray-500 dark:text-gray-400">Загрузка сообщений...</div></div>}
+                <main
+                    ref={scrollRef}
+                    onScroll={handleScroll}
+                    className="custom-scrollbar flex-1 lg:w-3xl max-w-full overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800"
+                >
+                    {loading && <div className="flex h-full items-center justify-center"><div className="text-gray-500 dark:text-gray-400">Загрузка сообщений...</div></div>}
                     {error && <div className="flex justify-center items-center h-full"><div className="text-center text-red-500 bg-red-100 dark:bg-red-900/20 dark:text-red-300 p-3 rounded-md">Ошибка: {error}</div></div>}
 
                     {!loading && !error && (
@@ -126,4 +146,4 @@ function ChatPage() {
     );
 }
 
-export default withRoleAuth(ChatPage, ['admin', 'user']);
+export default withRoleAuth(ChatPage, ["admin", "user"]);

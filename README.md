@@ -64,6 +64,8 @@ proot-distro login ubuntu -- bash -c "
     nvm use --lts; # Активируем LTS-версию Node.js
 
     cd ~/situation-in-the-city && \
+    git pull && \
+    npm run build && \
     npm run start
 "
 ```
