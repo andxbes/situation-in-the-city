@@ -5,6 +5,22 @@ import withRoleAuth from '../components/ProtectedRoute';
 import HighlightedMessage from '../components/filter-editor/HighlightedMessage';
 import SelectionMenu from '../components/filter-editor/SelectionMenu';
 
+function getHourWord(number) {
+    const lastDigit = number % 10;
+    const lastTwoDigits = number % 100;
+
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+        return 'часов';
+    }
+    if (lastDigit === 1) {
+        return 'час';
+    }
+    if (lastDigit >= 2 && lastDigit <= 4) {
+        return 'часа';
+    }
+    return 'часов';
+}
+
 function FilterEditorPage() {
     const [messages, setMessages] = useState([]);
     const [keywords, setKeywords] = useState([]);
@@ -45,8 +61,11 @@ function FilterEditorPage() {
 
     useEffect(() => {
         fetchMessages();
+    }, [fetchMessages]);
+
+    useEffect(() => {
         fetchKeywords();
-    }, [fetchMessages, fetchKeywords]);
+    }, [fetchKeywords]);
 
     const handleMouseUp = (e) => {
         const selectedText = window.getSelection().toString().trim();
@@ -102,7 +121,30 @@ function FilterEditorPage() {
                 <div className="flex-grow lg:w-2/3 flex flex-col">
                     <header className="mb-4 flex-shrink-0">
                         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Редактор фильтров</h1>
-                        {/* ... controls ... */}
+                        <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm mt-2">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <label htmlFor="hours-slider" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Период: {hours} {getHourWord(hours)}
+                                    </label>
+                                    <input
+                                        id="hours-slider"
+                                        type="range"
+                                        min="1"
+                                        max="24"
+                                        value={hours}
+                                        onChange={(e) => setHours(Number(e.target.value))}
+                                        className="w-48 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                                    />
+                                </div>
+                                {meta && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 text-right">
+                                        <div>Найдено: {meta.totalFound}</div>
+                                        <div>Запрос: {meta.processingTimeMs}ms</div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </header>
                     <main ref={mainContainerRef} className="custom-scrollbar flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800">
                         {loading && <div className="text-center">Загрузка...</div>}
