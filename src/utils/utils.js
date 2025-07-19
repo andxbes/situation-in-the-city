@@ -1,3 +1,5 @@
+import { getFilterKeywords } from "@/database/filterKeywords";
+
 /**
  * Debounces an async function, caches results, and coalesces concurrent calls.
  *
@@ -62,69 +64,75 @@ function getformatTime(unixTimestamp) {
 }
 
 
-// --- Constants for message filtering ---
+// --- Кэширование для скомпилированных фильтров ---
+let compiledFiltersCache = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 минут
 
-// Using Set for faster lookups for single characters/emojis
-const POSITIVE_EMOJIS = new Set([
-    '🥒', '🍆', '🥦', '✅', '🟢', '⛔️', '☀️', '😡', '🌼', '🫒', '🟥', '🚨', '🛑',
-    '🌞', '👌', '❌', '🪀', '🌳', '👹', '💚', '🤬', '🧶', '🌵', '🚓', '🚧', '🐸', '👮‍♂'
-]);
+/**
+ * Получает ключевые слова из БД, компилирует регулярные выражения и кэширует результат.
+ * @returns {{
+ *   positiveEmojis: Set<string>,
+ *   positiveRegex: RegExp | null,
+ *   negativeKeywords: Set<string>,
+ *   negativeRegex: RegExp | null
+ * }}
+ */
+function getCompiledFilters() {
+    const now = Date.now();
+    if (compiledFiltersCache && (now - cacheTimestamp) < CACHE_DURATION_MS) {
+        return compiledFiltersCache;
+    }
 
-const POSITIVE_WORDS = [
-    'грязно', 'грязь', 'крепят', 'крепять', 'Ямы', 'Тучи',
-    'чисто', 'чистота', 'чист', 'чистый',
-    'чизт', 'тихо', 'норм', 'в норме', 'ок', 'ok',
-    'оливок', 'оливки', 'оливками',
-    'зеленых', 'зелень', 'зелени', 'синие', 'синих', 'ухилянт', 'пикселя', 'черные', 'мусора', 'пидары',
-    'проверяют', 'упаковали', 'пресуют', 'пресують', 'пакуют', 'катаются',
-    'проверка', 'пешие',
-    'внимание', 'осторожно',
-    'патруль', 'патрулька', 'тцк', 'копы', 'трукам', 'трубкам', 'люстра', 'люстры', 'бп',
-    'черти', 'гнили', 'гниль',
-    'волга', 'нива', 'ніва', 'ніве', 'ниве', 'бус', 'девятка', 'волга', 'амулет', 'форд', 'спринтер', 'транзіт', 'транзит', 'пирожок',
-    'на[\\s]+военных[\\s]+номерах',
-    '6778',
-    'воины[\\s]+добра',
-];
+    const keywords = getFilterKeywords();
 
-const NEGATIVE_KEYWORDS = new Set(['?', '¿', 'съебётся']);
-const NEGATIVE_WORDS = [
-    'бля', 'желательно', 'а какой', 'в ахуе', 'пох',
-    'если', 'чево', 'чего', 'шотак', 'нахуй', 'блэт',
-    'вайб', 'почему', 'долбоеб', 'далбаеб', 'хуй', 'пидар', 'съебётся',
-    'вобщем', 'меня', 'долго', 'знакомого', 'говорили', 'мне', 'заебал', 'перед[\\s]тем',
-    'потому[\\s]что', 'каждому', 'чувствовал', 'бежать', 'чувствовал',
-    'для', 'даже', 'фильм', 'актёры', 'буду[\\s]знать',
-    'вариант', 'развлекайся', 'перерва', 'пиво', 'водка', 'водки',
-    'ты',
-    'договор',
-    'я',
-    'фух'
-];
+    const allPositiveWords = [
+        ...keywords.positiveWords,
+        ...keywords.positiveRegex,
+    ];
+    const allNegativeWords = [
+        ...keywords.negativeWords,
+        ...keywords.negativeRegex,
+    ];
 
-// Compile regexes once and reuse them
-const POSITIVE_REGEX = new RegExp(`(^|[\\s])(${POSITIVE_WORDS.join('|')})([\\s\\!\\.\\,]+|$)`, 'i');
-const NEGATIVE_REGEX = new RegExp(`(^|[\\s])(${NEGATIVE_WORDS.join('|')})([\\s\\?\\.\\,\\!]|$)`, 'i');
+    const compiled = {
+        positiveEmojis: keywords.positiveEmojis,
+        positiveRegex: allPositiveWords.length > 0
+            ? new RegExp(`(^|[\\s])(${allPositiveWords.join('|')})([\\s\\!\\.\\,]+|$)`, 'i')
+            : null,
+        negativeKeywords: keywords.negativeKeywords,
+        negativeRegex: allNegativeWords.length > 0
+            ? new RegExp(`(^|[\\s])(${allNegativeWords.join('|')})([\\s\\?\\.\\,\\!]|$)`, 'i')
+            : null,
+    };
+
+    compiledFiltersCache = compiled;
+    cacheTimestamp = now;
+
+    return compiled;
+}
 
 const MAX_MESSAGE_LENGTH = 120;
 
 function filter_messages(messages) {
+    const filters = getCompiledFilters();
+
     return messages.filter((message) => {
         const msg = message?.message;
         if (!msg || msg.length >= MAX_MESSAGE_LENGTH) {
             return false;
         }
 
-        const hasPositiveEmoji = [...POSITIVE_EMOJIS].some(emoji => msg.includes(emoji));
-        const hasPositiveWord = POSITIVE_REGEX.test(msg);
+        const hasPositiveEmoji = [...filters.positiveEmojis].some(emoji => msg.includes(emoji));
+        const hasPositiveWord = filters.positiveRegex ? filters.positiveRegex.test(msg) : false;
         const passesTrueCheck = hasPositiveEmoji || hasPositiveWord;
 
         if (!passesTrueCheck) {
             return false;
         }
 
-        const hasNegativeKeyword = [...NEGATIVE_KEYWORDS].some(word => msg.includes(word));
-        const hasNegativeWord = NEGATIVE_REGEX.test(msg);
+        const hasNegativeKeyword = [...filters.negativeKeywords].some(word => msg.includes(word));
+        const hasNegativeWord = filters.negativeRegex ? filters.negativeRegex.test(msg) : false;
         const passesFalseCheck = hasNegativeKeyword || hasNegativeWord;
 
         return !passesFalseCheck;
@@ -132,4 +140,4 @@ function filter_messages(messages) {
 }
 
 
-module.exports = { getformatDateTime, getformatTime, filter_messages, debounce };
+export { getformatDateTime, getformatTime, filter_messages, debounce };
