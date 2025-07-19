@@ -176,24 +176,34 @@ function FilterEditorPage() {
                         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    <th scope="col" className="px-4 py-2">Слово</th>
-                                    <th scope="col" className="px-4 py-2">Тип</th>
-                                    <th scope="col" className="px-4 py-2"></th>
+                                    <th scope="col" className="px-2 py-2 w-12 text-center">Удал.</th>
+                                    <th scope="col" className="px-4 py-2">Ключевое слово</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {keywords.map(kw => (
-                                    <tr key={kw.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                        <td className="px-4 py-2 font-medium text-gray-900 dark:text-white">{kw.keyword}</td>
-                                        <td className="px-4 py-2">
-                                            <span className={`px-2 py-1 rounded-full text-xs ${kw.type.includes('positive') ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}>
-                                                {kw.type}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-2 text-right">
-                                            <button onClick={() => handleDeleteKeyword(kw.id)} className="text-red-500 hover:text-red-700">
-                                                &#x2715;
+                                    <tr key={kw.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                        <td className="px-2 py-2 text-center align-middle">
+                                            <button
+                                                onClick={() => handleDeleteKeyword(kw.id)}
+                                                className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                                                title="Удалить ключевое слово"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
                                             </button>
+                                        </td>
+                                        <td className="px-4 py-2 align-middle">
+                                            <span
+                                                className={`px-3 py-1 text-sm font-mono rounded-full w-full inline-block ${kw.type === 'positive'
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                    }`}
+                                                title={`Тип: ${kw.type}${kw.is_regex ? ' (Регулярное выражение)' : ''}`}
+                                            >
+                                                {kw.keyword}
+                                            </span>
                                         </td>
                                     </tr>
                                 ))}
