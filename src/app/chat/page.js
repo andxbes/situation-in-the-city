@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import withRoleAuth from '../components/ProtectedRoute';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 
 function ChatPage() {
+    const { data: session } = useSession();
     const [messages, setMessages] = useState([]);
     const [isAtBottom, setIsAtBottom] = useState(true);
     const [meta, setMeta] = useState(null);
@@ -78,6 +81,7 @@ function ChatPage() {
         }
         return 'часов';
     }
+    const isAdmin = session?.user?.role === 'admin';
 
     return (
         <div className="bg-gray-100 dark:bg-gray-900">
@@ -100,6 +104,7 @@ function ChatPage() {
                                     className="w-48 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
                                 />
                             </div>
+                            {isAdmin && <Link className='px-2 py-1 text-sm font-medium text-center text-white bg-green-700 rounded-lg cursor-pointer hover:bg-green-800 focus:ring-4 focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800' href="/filter-editor">R</Link>}
                             {meta && (
                                 <div className="text-xs text-gray-500 dark:text-gray-400 text-right">
                                     <div>Найдено: {meta.totalFound}</div>
