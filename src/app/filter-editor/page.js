@@ -170,7 +170,7 @@ function FilterEditorPage() {
                 </div>
 
                 {/* Keywords Column */}
-                <div className="flex-shrink-0 lg:w-1/3 flex flex-col">
+                <div className="flex-shrink-0 lg:w-[40%] flex flex-col">
                     <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Ключевые слова</h2>
                     <div className="custom-scrollbar flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800">
                         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -194,11 +194,11 @@ function FilterEditorPage() {
                                                 </svg>
                                             </button>
                                         </td>
-                                        <td className="px-4 py-2 align-middle">
+                                        <td className="px-2 py-2 align-middle">
                                             <span
                                                 className={`px-3 py-1 text-sm font-mono rounded-full w-full inline-block ${kw.type === 'positive'
-                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                                                     }`}
                                                 title={`Тип: ${kw.type}${kw.is_regex ? ' (Регулярное выражение)' : ''}`}
                                             >

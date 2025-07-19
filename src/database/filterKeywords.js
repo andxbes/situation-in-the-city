@@ -5,6 +5,8 @@ const INITIAL_KEYWORDS = [
     // Positive Keywords (Emojis and Words)
     ...[
         "🥒",
+        "🚔",
+        "🌝",
         "👍",
         "🍆",
         "🥦",
@@ -92,6 +94,8 @@ const INITIAL_KEYWORDS = [
         "нива",
         "ніва",
         "ніве",
+        "шеран",
+        "шаран",
         "ниве",
         "бус",
         "девятка",
