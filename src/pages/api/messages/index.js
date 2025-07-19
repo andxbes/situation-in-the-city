@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "./auth/[...nextauth]";
-import { getMessagesForPeriod } from "../../tg/tclient";
-import { filter_messages, getformatTime } from "../../utils/utils";
+import { authOptions } from "../auth/[...nextauth]";
+import { getMessagesForPeriod } from "../../../tg/tclient";
+import { filter_messages, getformatTime } from "../../../utils/utils";
 
 export default async function handler(req, res) {
     const session = await getServerSession(req, res, authOptions);
