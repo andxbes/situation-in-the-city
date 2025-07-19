@@ -64,18 +64,27 @@ function getformatTime(unixTimestamp) {
 }
 
 
-// --- Кэширование для скомпилированных фильтров ---
+// Helper to check if a string is word-like (contains letters/numbers)
+// to decide if it needs word boundaries in regex.
+const isWordLike = (str) => /^[\p{L}\p{N}\s]+$/u.test(str);
+
+// Helper to escape special regex characters.
+function escapeRegex(string) {
+    return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
+// --- Cache for compiled filters ---
 let compiledFiltersCache = null;
 let cacheTimestamp = 0;
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 минут
 
 /**
- * Получает ключевые слова из БД, компилирует регулярные выражения и кэширует результат.
+ * Gets keywords from DB, compiles them into regexes and symbol lists, and caches the result.
  * @returns {{
- *   positiveEmojis: Set<string>,
  *   positiveRegex: RegExp | null,
- *   negativeKeywords: Set<string>,
- *   negativeRegex: RegExp | null
+ *   positiveSymbols: string[],
+ *   negativeRegex: RegExp | null,
+ *   negativeSymbols: string[]
  * }}
  */
 function getCompiledFilters() {
@@ -86,25 +95,47 @@ function getCompiledFilters() {
 
     const keywords = getFilterKeywords();
 
-    const allPositiveWords = [
-        ...keywords.positiveWords,
-        ...keywords.positiveRegex,
-    ];
-    const allNegativeWords = [
-        ...keywords.negativeWords,
-        ...keywords.negativeRegex,
-    ];
-
     const compiled = {
-        positiveEmojis: keywords.positiveEmojis,
-        positiveRegex: allPositiveWords.length > 0
-            ? new RegExp(`(^|[\\s])(${allPositiveWords.join('|')})([\\s\\!\\.\\,]+|$)`, 'i')
-            : null,
-        negativeKeywords: keywords.negativeKeywords,
-        negativeRegex: allNegativeWords.length > 0
-            ? new RegExp(`(^|[\\s])(${allNegativeWords.join('|')})([\\s\\?\\.\\,\\!]|$)`, 'i')
-            : null,
+        positiveRegex: null,
+        positiveSymbols: [],
+        negativeRegex: null,
+        negativeSymbols: [],
     };
+
+    const positiveWordParts = [];
+    const negativeWordParts = [];
+
+    // Process positive keywords
+    for (const kw of keywords.positive) {
+        if (kw.is_regex) {
+            positiveWordParts.push(kw.keyword); // Add raw regex
+        } else if (isWordLike(kw.keyword)) {
+            positiveWordParts.push(escapeRegex(kw.keyword));
+        } else {
+            compiled.positiveSymbols.push(kw.keyword.toLowerCase()); // For case-insensitive `includes`
+        }
+    }
+
+    // Process negative keywords
+    for (const kw of keywords.negative) {
+        if (kw.is_regex) {
+            negativeWordParts.push(kw.keyword);
+        } else if (isWordLike(kw.keyword)) {
+            negativeWordParts.push(escapeRegex(kw.keyword));
+        } else {
+            compiled.negativeSymbols.push(kw.keyword.toLowerCase());
+        }
+    }
+
+    if (positiveWordParts.length > 0) {
+        // Use Unicode-aware "word boundaries" via lookarounds because `\b` fails for Cyrillic.
+        // The 'i' flag makes it case-insensitive. 'u' flag for unicode.
+        compiled.positiveRegex = new RegExp(`(?<=^|[^\\p{L}\\p{N}])(${positiveWordParts.join('|')})(?=[^\\p{L}\\p{N}]|$)`, 'iu');
+    }
+
+    if (negativeWordParts.length > 0) {
+        compiled.negativeRegex = new RegExp(`(?<=^|[^\\p{L}\\p{N}])(${negativeWordParts.join('|')})(?=[^\\p{L}\\p{N}]|$)`, 'iu');
+    }
 
     compiledFiltersCache = compiled;
     cacheTimestamp = now;
@@ -118,24 +149,27 @@ function filter_messages(messages) {
     const filters = getCompiledFilters();
 
     return messages.filter((message) => {
-        const msg = message?.message;
+        const msg = message?.message; // Keep original case for regex
         if (!msg || msg.length >= MAX_MESSAGE_LENGTH) {
             return false;
         }
+        const lowerCaseMsg = msg.toLowerCase();
 
-        const hasPositiveEmoji = [...filters.positiveEmojis].some(emoji => msg.includes(emoji));
+        // Check for positive matches
+        const hasPositiveSymbol = filters.positiveSymbols.some(symbol => lowerCaseMsg.includes(symbol));
         const hasPositiveWord = filters.positiveRegex ? filters.positiveRegex.test(msg) : false;
-        const passesTrueCheck = hasPositiveEmoji || hasPositiveWord;
+        const passesPositiveCheck = hasPositiveSymbol || hasPositiveWord;
 
-        if (!passesTrueCheck) {
+        if (!passesPositiveCheck) {
             return false;
         }
 
-        const hasNegativeKeyword = [...filters.negativeKeywords].some(word => msg.includes(word));
+        // Check for negative matches
+        const hasNegativeSymbol = filters.negativeSymbols.some(symbol => lowerCaseMsg.includes(symbol));
         const hasNegativeWord = filters.negativeRegex ? filters.negativeRegex.test(msg) : false;
-        const passesFalseCheck = hasNegativeKeyword || hasNegativeWord;
+        const passesNegativeCheck = hasNegativeSymbol || hasNegativeWord;
 
-        return !passesFalseCheck;
+        return !passesNegativeCheck;
     });
 }
 
