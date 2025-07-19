@@ -1,26 +1,174 @@
-import db, { query, execute, getOne } from './db';
+import db, { query, execute, getOne } from "./db";
 
 // Эти ключевые слова будут добавлены в базу данных при первой инициализации.
 const INITIAL_KEYWORDS = [
     // Positive Keywords (Emojis and Words)
-    ...['🥒', '👍', '🍆', '🥦', '✅', '🟢', '⛔️', '☀️', '😡', '🌼', '🫒', '🟥', '🚨', '🛑', '🌞', '👌', '❌', '🪀', '🌳', '👹', '💚', '🤬', '🧶', '🌵', '🚓', '🚧', '🐸', '👮‍♂'].map(k => ({ keyword: k, type: 'positive', is_regex: 0 })),
+    ...[
+        "🥒",
+        "👍",
+        "🍆",
+        "🥦",
+        "✅",
+        "🟢",
+        "⛔️",
+        "☀️",
+        "😡",
+        "🌼",
+        "🫒",
+        "🟥",
+        "🚨",
+        "🛑",
+        "🌞",
+        "👌",
+        "❌",
+        "🪀",
+        "🌳",
+        "👹",
+        "💚",
+        "🤬",
+        "🧶",
+        "🌵",
+        "🚓",
+        "🚧",
+        "🐸",
+        "👮‍♂",
+    ].map((k) => ({ keyword: k, type: "positive", is_regex: 0 })),
 
     // Positive Words
-    ...['грязно', 'грязь', 'крепят', 'крепять', 'Ямы', 'Тучи', 'чисто', 'чистота', 'чист', 'чистый', 'чизт', 'тихо', 'норм', 'в норме', 'ок', 'ok', 'оливок', 'оливки', 'оливками', 'зеленых', 'зелень', 'зелени', 'синие', 'синих', 'ухилянт', 'пикселя', 'черные', 'мусора', 'пидары', 'проверяют', 'упаковали', 'пресуют', 'пресують', 'пакуют', 'катаются', 'проверка', 'пешие', 'внимание', 'осторожно', 'патруль', 'патрулька', 'тцк', 'копы', 'трукам', 'трубкам', 'люстра', 'люстры', 'бп', 'черти', 'гнили', 'гниль', 'волга', 'нива', 'ніва', 'ніве', 'ниве', 'бус', 'девятка', 'амулет', 'форд', 'спринтер', 'транзіт', 'транзит', 'пирожок'].map(k => ({ keyword: k, type: 'positive', is_regex: 0 })),
+    ...[
+        "грязно",
+        "cалатовый",
+        "грязь",
+        "крепят",
+        "крепять",
+        "Ямы",
+        "Тучи",
+        "чисто",
+        "чистота",
+        "чист",
+        "чистый",
+        "чизт",
+        "тихо",
+        "норм",
+        "в норме",
+        "ок",
+        "ok",
+        "оливок",
+        "оливки",
+        "оливками",
+        "зеленых",
+        "зелень",
+        "зелени",
+        "синие",
+        "синих",
+        "ухилянт",
+        "пикселя",
+        "черные",
+        "мусора",
+        "пидары",
+        "проверяют",
+        "упаковали",
+        "пресуют",
+        "пресують",
+        "пакуют",
+        "катаются",
+        "проверка",
+        "пешие",
+        "внимание",
+        "осторожно",
+        "патруль",
+        "патрулька",
+        "тцк",
+        "копы",
+        "трукам",
+        "трубкам",
+        "люстра",
+        "люстры",
+        "бп",
+        "черти",
+        "гнили",
+        "гниль",
+        "волга",
+        "нива",
+        "ніва",
+        "ніве",
+        "ниве",
+        "бус",
+        "девятка",
+        "амулет",
+        "форд",
+        "спринтер",
+        "транзіт",
+        "транзит",
+        "пирожок",
+    ].map((k) => ({ keyword: k, type: "positive", is_regex: 0 })),
 
     // Positive Regex
-    ...['на[\\s]+военных[\\s]+номерах', '6778', 'воины[\\s]+добра'].map(k => ({ keyword: k, type: 'positive', is_regex: 1 })),
+    ...["на[\\s]+военных[\\s]+номерах", "6778", "воины[\\s]+добра"].map((k) => ({
+        keyword: k,
+        type: "positive",
+        is_regex: 1,
+    })),
 
     // Negative Keywords (Symbols and Words)
-    ...['?', '¿', 'съебётся'].map(k => ({ keyword: k, type: 'negative', is_regex: 0 })),
+    ...["?", "¿", "съебётся"].map((k) => ({
+        keyword: k,
+        type: "negative",
+        is_regex: 0,
+    })),
 
     // Negative Words
-    ...['бля', 'желательно', 'а какой', 'в ахуе', 'пох', 'если', 'чево', 'чего', 'шотак', 'нахуй', 'блэт', 'вайб', 'почему', 'долбоеб', 'далбаеб', 'хуй', 'пидар', 'вобщем', 'меня', 'долго', 'знакомого', 'говорили', 'мне', 'заебал', 'каждому', 'чувствовал', 'бежать', 'для', 'даже', 'фильм', 'актёры', 'буду[\\s]знать', 'вариант', 'развлекайся', 'перерва', 'пиво', 'водка', 'водки', 'ты', 'договор', 'я', 'фух'].map(k => ({ keyword: k, type: 'negative', is_regex: 0 })),
+    ...[
+        "бля",
+        "желательно",
+        "а какой",
+        "в ахуе",
+        "пох",
+        "если",
+        "чево",
+        "чего",
+        "шотак",
+        "нахуй",
+        "блэт",
+        "вайб",
+        "почему",
+        "долбоеб",
+        "далбаеб",
+        "хуй",
+        "пидар",
+        "вобщем",
+        "меня",
+        "долго",
+        "знакомого",
+        "говорили",
+        "мне",
+        "заебал",
+        "каждому",
+        "чувствовал",
+        "бежать",
+        "для",
+        "даже",
+        "фильм",
+        "актёры",
+        "буду[\\s]знать",
+        "вариант",
+        "развлекайся",
+        "перерва",
+        "пиво",
+        "водка",
+        "водки",
+        "ты",
+        "договор",
+        "фух",
+    ].map((k) => ({ keyword: k, type: "negative", is_regex: 0 })),
 
     // Negative Regex
-    ...['потому[\\s]что', 'перед[\\s]тем'].map(k => ({ keyword: k, type: 'negative', is_regex: 1 })),
+    ...["потому[\\s]что", "перед[\\s]тем"].map((k) => ({
+        keyword: k,
+        type: "negative",
+        is_regex: 1,
+    })),
 ];
-
 
 export const initializeFilterKeywordsDatabase = () => {
     execute(`
@@ -32,12 +180,16 @@ export const initializeFilterKeywordsDatabase = () => {
         )
     `);
 
-    const keywordCount = getOne('SELECT COUNT(*) as count FROM filter_keywords')?.count;
+    const keywordCount = getOne(
+        "SELECT COUNT(*) as count FROM filter_keywords"
+    )?.count;
 
     if (keywordCount === 0) {
-        console.log('Populating filter_keywords table with initial data...');
+        console.log("Populating filter_keywords table with initial data...");
 
-        const insert = db.prepare('INSERT INTO filter_keywords (keyword, type, is_regex) VALUES (?, ?, ?)');
+        const insert = db.prepare(
+            "INSERT INTO filter_keywords (keyword, type, is_regex) VALUES (?, ?, ?)"
+        );
 
         const insertMany = db.transaction((items) => {
             for (const item of items) {
@@ -45,7 +197,7 @@ export const initializeFilterKeywordsDatabase = () => {
                     insert.run(item.keyword, item.type, Number(item.is_regex));
                 } catch (error) {
                     // Игнорируем ошибки уникальности, если в исходных данных есть дубликаты
-                    if (!error.message.includes('UNIQUE constraint failed')) {
+                    if (!error.message.includes("UNIQUE constraint failed")) {
                         console.error(`Failed to insert keyword: ${item.keyword}`, error);
                         throw error;
                     }
@@ -55,9 +207,9 @@ export const initializeFilterKeywordsDatabase = () => {
 
         try {
             insertMany(INITIAL_KEYWORDS);
-            console.log('filter_keywords table populated successfully.');
+            console.log("filter_keywords table populated successfully.");
         } catch (error) {
-            console.error('Error populating filter_keywords table:', error);
+            console.error("Error populating filter_keywords table:", error);
         }
     }
 };
@@ -71,7 +223,7 @@ export const initializeFilterKeywordsDatabase = () => {
  * }} Объект с ключевыми словами, сгруппированными по типу.
  */
 export const getFilterKeywords = () => {
-    const rows = query('SELECT keyword, type, is_regex FROM filter_keywords');
+    const rows = query("SELECT keyword, type, is_regex FROM filter_keywords");
 
     const keywords = {
         positive: [],
@@ -80,11 +232,17 @@ export const getFilterKeywords = () => {
 
     for (const row of rows) {
         switch (row.type) {
-            case 'positive':
-                keywords.positive.push({ keyword: row.keyword, is_regex: row.is_regex });
+            case "positive":
+                keywords.positive.push({
+                    keyword: row.keyword,
+                    is_regex: row.is_regex,
+                });
                 break;
-            case 'negative':
-                keywords.negative.push({ keyword: row.keyword, is_regex: row.is_regex });
+            case "negative":
+                keywords.negative.push({
+                    keyword: row.keyword,
+                    is_regex: row.is_regex,
+                });
                 break;
         }
     }
@@ -96,7 +254,7 @@ export const getFilterKeywords = () => {
  * @returns {Array<Object>}
  */
 export const getAllFilterKeywords = () => {
-    return query('SELECT * FROM filter_keywords ORDER BY type, keyword');
+    return query("SELECT * FROM filter_keywords ORDER BY type, keyword");
 };
 
 /**
@@ -106,17 +264,17 @@ export const getAllFilterKeywords = () => {
  */
 export const addFilterKeyword = ({ keyword, type, is_regex = 0 }) => {
     if (!keyword || !type) {
-        throw new Error('Keyword and type are required.');
+        throw new Error("Keyword and type are required.");
     }
     try {
         return execute(
-            'INSERT INTO filter_keywords (keyword, type, is_regex) VALUES (?, ?, ?)',
+            "INSERT INTO filter_keywords (keyword, type, is_regex) VALUES (?, ?, ?)",
             [keyword.trim(), type, is_regex]
         );
     } catch (error) {
-        if (error.message.includes('UNIQUE constraint failed')) {
+        if (error.message.includes("UNIQUE constraint failed")) {
             const err = new Error(`Keyword "${keyword}" already exists.`);
-            err.code = 'SQLITE_CONSTRAINT_UNIQUE';
+            err.code = "SQLITE_CONSTRAINT_UNIQUE";
             throw err;
         }
         throw error;
@@ -124,6 +282,6 @@ export const addFilterKeyword = ({ keyword, type, is_regex = 0 }) => {
 };
 
 export const deleteFilterKeyword = (id) => {
-    if (!id) throw new Error('ID is required to delete a keyword.');
-    return execute('DELETE FROM filter_keywords WHERE id = ?', [id]);
+    if (!id) throw new Error("ID is required to delete a keyword.");
+    return execute("DELETE FROM filter_keywords WHERE id = ?", [id]);
 };
