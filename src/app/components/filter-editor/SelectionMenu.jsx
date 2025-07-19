@@ -18,13 +18,13 @@ export default function SelectionMenu({ selection, onAddKeyword, onClose }) {
                 "{selection.text}"
             </div>
             <button
-                onClick={() => onAddKeyword(selection.text, 'positive_word')}
+                onClick={() => onAddKeyword(selection.text, 'positive')}
                 className="text-left text-green-700 dark:text-green-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded px-2 py-1"
             >
                 Добавить в позитивные
             </button>
             <button
-                onClick={() => onAddKeyword(selection.text, 'negative_word')}
+                onClick={() => onAddKeyword(selection.text, 'negative')}
                 className="text-left text-red-700 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded px-2 py-1"
             >
                 Добавить в негативные
