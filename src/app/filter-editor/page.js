@@ -116,7 +116,7 @@ function FilterEditorPage() {
     return (
         <div className="bg-gray-100 dark:bg-gray-900" onMouseUp={handleMouseUp}>
             <SelectionMenu selection={selection} onAddKeyword={handleAddKeyword} onClose={() => setSelection({ show: false })} />
-            <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-4 h-screen">
+            <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-4 lg:h-screen">
                 {/* Messages Column */}
                 <div className="flex-grow lg:w-2/3 flex flex-col">
                     <header className="mb-4 flex-shrink-0">
