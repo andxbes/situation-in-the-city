@@ -29,7 +29,7 @@ export default function Footer(params) {
                                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-0 w-max hidden group-hover:flex flex-col items-center bg-gray-700 text-white p-2 rounded-md shadow-lg z-10">
                                     <span className="text-xs whitespace-nowrap">Role: {session.user.role}</span>
                                     <button
-                                        onClick={() => signOut()}
+                                        onClick={() => signOut({ callbackUrl: '/' })}
                                         className="mt-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-1 px-3 rounded text-xs w-full"
                                     >
                                         Sign Out
