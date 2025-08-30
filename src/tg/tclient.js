@@ -55,8 +55,35 @@ async function getAvailableChanel() {
 
 let cache = new Map();
 
-// Keep track of the last fetch time for each chat to avoid spamming for new messages.
-const cacheMetadata = new Map(); // { chatId -> { lastUpdate: timestamp } }
+// Метаданные для кэша, чтобы отслеживать время последнего обновления.
+// { chatId -> { lastUpdate: timestamp } }
+const cacheMetadata = new Map();
+
+// --- Периодическая очистка кэша ---
+
+/**
+ * Удаляет из кэша сообщения старше 24 часов.
+ */
+function removeOldMessages() {
+    // Telegram-даты в секундах, Date.now() в миллисекундах.
+    const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+
+    cache.forEach((messages, chatId) => {
+        const old_length = messages.length;
+        const updatedMessages = messages.filter(message => {
+            // message.date - это unix timestamp в секундах
+            return message.date >= twentyFourHoursAgo;
+        });
+
+        if (updatedMessages.length < old_length) {
+            cache.set(chatId, updatedMessages);
+            console.log(`Очистка кэша для чата ${chatId}: удалено ${old_length - updatedMessages.length} старых сообщений.`);
+        }
+    });
+}
+
+// Запускаем очистку каждый час.
+setInterval(removeOldMessages, 60 * 60 * 1000);
 
 async function getMessagesForPeriod(fromTime) {
     // To make the cache key stable, we round the timestamp to the nearest minute.
@@ -76,7 +103,9 @@ async function getMessagesForPeriod(fromTime) {
 
 async function getMessagesFromChatCached(chatId, fromTime) {
     let chatArray = cache.get(chatId) || [];
-    const meta = cacheMetadata.get(chatId) || { lastUpdate: 0 };
+    const meta = cacheMetadata.get(chatId) || {
+        lastUpdate: 0
+    };
 
     const newestCachedMessage = chatArray.length > 0 ? chatArray[chatArray.length - 1] : null;
     const oldestCachedMessage = chatArray.length > 0 ? chatArray[0] : null;
@@ -84,24 +113,27 @@ async function getMessagesFromChatCached(chatId, fromTime) {
     const now = Date.now();
     let newMessages = [];
     let olderMessages = [];
-    let performedFetch = false;
+    let performedFetchForNew = false;
 
-    // Case 1: Cache is empty. Perform initial fetch.
+    // Случай 1: Кэш пуст. Выполняем первоначальную загрузку.
     if (!oldestCachedMessage) {
-        // Fetch everything from now down to the requested fromTime.
-        olderMessages = await getMessagesFromChat(chatId, { minDate: fromTime });
-        // No need to fetch "new" messages separately.
-        performedFetch = true;
+        olderMessages = await getMessagesFromChat(chatId, {
+            minDate: fromTime
+        });
+        performedFetchForNew = true; // Мы загрузили все, включая новые
     } else {
-        // Case 2: Cache has data. Fetch updates.
+        // Случай 2: В кэше есть данные. Загружаем обновления.
 
-        // 2a. Fetch newer messages only if cache is stale (older than 60s)
+        // 2a. Загружаем новые сообщения, только если кэш "устарел" (старше 60 секунд)
+        // Это предотвращает слишком частые запросы к API.
         if (now - meta.lastUpdate > 60000) {
-            newMessages = await getMessagesFromChat(chatId, { minId: newestCachedMessage.id });
-            performedFetch = true; // We performed a check for new messages.
+            newMessages = await getMessagesFromChat(chatId, {
+                minId: newestCachedMessage.id
+            });
+            performedFetchForNew = true;
         }
 
-        // 2b. Fetch older messages if the request requires them (user expanded the time range)
+        // 2b. Загружаем более старые сообщения, если они требуются для запроса
         if (fromTime < oldestCachedMessage.date) {
             olderMessages = await getMessagesFromChat(chatId, {
                 maxId: oldestCachedMessage.id,
@@ -110,26 +142,28 @@ async function getMessagesFromChatCached(chatId, fromTime) {
         }
     }
 
-    // 3. If we fetched anything, update the cache and metadata
-    if (performedFetch || olderMessages.length > 0) {
-        // Combine all messages
+    // 3. Если мы что-то загрузили, обновляем кэш и метаданные
+    if (newMessages.length > 0 || olderMessages.length > 0) {
         const allMessages = [...olderMessages, ...chatArray, ...newMessages];
 
-        // Deduplicate, sort, and update the cache for the chat.
+        // Дедупликация, сортировка и обновление кэша
         const messageMap = new Map();
         allMessages.forEach(msg => messageMap.set(msg.id, msg));
         const uniqueMessages = Array.from(messageMap.values());
         uniqueMessages.sort((a, b) => a.date - b.date);
 
         cache.set(chatId, uniqueMessages);
-        if (performedFetch) {
-            cacheMetadata.set(chatId, { lastUpdate: now }); // Update timestamp only when we check for new messages
+        // Обновляем метку времени, только если мы проверяли наличие новых сообщений
+        if (performedFetchForNew) {
+            cacheMetadata.set(chatId, {
+                lastUpdate: now
+            });
         }
 
         return uniqueMessages;
     }
 
-    // 4. If we didn't fetch, just return the existing cache
+    // 4. Если ничего не загружали, просто возвращаем существующий кэш
     return chatArray;
 }
 
