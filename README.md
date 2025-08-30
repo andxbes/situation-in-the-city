@@ -65,6 +65,7 @@ proot-distro login ubuntu -- bash -c "
 
     cd ~/situation-in-the-city && \
     git pull && \
+    npm i && \
     npm run build && \
     npm run start
 "
