@@ -26,6 +26,24 @@ const logToFile = (level, ...args) => {
     console.log(logMessage.trim()); // Дублируем в консоль для удобства разработки
 };
 
+// --- Автоматическая очистка логов ---
+
+const clearLogFile = () => {
+    try {
+        if (fs.existsSync(logFilePath)) {
+            // Очищаем файл (устанавливаем его длину в 0)
+            fs.truncateSync(logFilePath, 0);
+            logToFile('info', 'Файл логов был автоматически очищен по расписанию.');
+        }
+    } catch (error) {
+        logToFile('error', 'Ошибка при автоматической очистке файла логов:', error);
+    }
+};
+
+// Запускаем очистку раз в сутки (24 часа * 60 минут * 60 секунд * 1000 миллисекунд)
+const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
+setInterval(clearLogFile, ONE_DAY_IN_MS);
+
 module.exports = {
     log: (...args) => logToFile('info', ...args),
     error: (...args) => logToFile('error', ...args),
