@@ -1,6 +1,7 @@
 'use server'
 // database/db.js
 import Database from 'better-sqlite3';
+import logger from '@/utils/logger';
 
 const db = new Database(process.env.DB_NAME ?? './database.db');
 
@@ -10,7 +11,8 @@ export const query = (sql, params = []) => {
         const statement = db.prepare(sql);
         return statement.all(params);
     } catch (error) {
-        console.error('Ошибка выполнения запроса:', error);
+        // console.error('Ошибка выполнения запроса:', error);
+        logger.error('DB query error:', { sql, params, error });
         throw error;
     }
 };
@@ -22,7 +24,8 @@ export const execute = (sql, params = []) => {
         const info = statement.run(params);
         return info;
     } catch (error) {
-        console.error('Ошибка выполнения запроса:', error);
+        // console.error('Ошибка выполнения запроса:', error);
+        logger.error('DB execute error:', { sql, params, error });
         throw error;
     }
 };
@@ -33,7 +36,8 @@ export const getOne = (sql, params = []) => {
         const statement = db.prepare(sql);
         return statement.get(params);
     } catch (error) {
-        console.error('Ошибка выполнения запроса:', error);
+        // console.error('Ошибка выполнения запроса:', error);
+        logger.error('DB getOne error:', { sql, params, error });
         throw error;
     }
 };

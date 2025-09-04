@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { getMessagesForPeriod } from "../../../tg/tclient";
 import { filter_messages, getformatTime } from "../../../utils/utils";
+import logger from "@/utils/logger";
 
 export default async function handler(req, res) {
     const session = await getServerSession(req, res, authOptions);
@@ -17,7 +18,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
         try {
-            const startTime = Date.now();
+            const requestStartTime = Date.now();
 
             // Получаем 'hours' из параметров запроса, по умолчанию 1 час, если не указано.
             const hours = parseInt(req.query.hours, 10) || 1;
@@ -56,7 +57,7 @@ export default async function handler(req, res) {
                 };
             });
 
-            const endTime = Date.now();
+            const processingTimeMs = Date.now() - requestStartTime;
 
             // Отправляем отфильтрованные сообщения в ответе.
             res.status(200).json({
@@ -64,11 +65,11 @@ export default async function handler(req, res) {
                 meta: {
                     totalFound: allMessages.length,
                     filteredCount: filteredMessages.length,
-                    processingTimeMs: endTime - startTime,
+                    processingTimeMs,
                 }
             });
         } catch (error) {
-            console.error('Error fetching or filtering messages:', error);
+            logger.error('API /messages handler error:', error);
             res.status(500).json({ message: "An error occurred while fetching messages." });
         }
     } else {

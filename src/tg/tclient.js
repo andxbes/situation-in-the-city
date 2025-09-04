@@ -1,38 +1,39 @@
 const { TelegramClient } = require("telegram");
 const { StringSession } = require("telegram/sessions");
-const readline = require("readline");
+const logger = require("@/utils/logger"); // Импортируем наш логгер
 
 const stringSession = new StringSession(process.env.API_T_SESSION); // fill this later with the value from session.save()
-
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
-
 
 const client = new TelegramClient(stringSession,
     parseInt(process.env.API_T_ID),
     process.env.API_T_HASH, {
     connectionRetries: 5,
 });
-client.start({
-    phoneNumber: async () =>
-        new Promise((resolve) =>
-            rl.question("Please enter your number: ", resolve)
-        ),
-    password: async () =>
-        new Promise((resolve) =>
-            rl.question("Please enter your password: ", resolve)
-        ),
-    phoneCode: async () =>
-        new Promise((resolve) =>
-            rl.question("Please enter the code you received: ", resolve)
-        ),
-    onError: (err) => console.log(err),
-}).then(() => {
-    console.log("You should now be connected.");
-    console.log(client.session.save()); // Save this string to avoid logging in again to API_T_SESSION
-});
+
+// ВАЖНО: Этот блок `client.start` предназначен только для ОДНОРАЗОВОГО
+// интерактивного запуска, чтобы сгенерировать строку сессии (API_T_SESSION).
+// Он НЕ ДОЛЖЕН выполняться на сервере, так как он будет ждать ввода в консоли,
+// что и вызывает "зависание" вашего API.
+// Для генерации сессии, раскомментируйте этот блок, запустите `node src/tg/tclient.js`,
+// введите данные, скопируйте полученную строку сессии и вставьте ее в .env файл.
+// После этого ОБЯЗАТЕЛЬНО закомментируйте этот блок обратно.
+/*
+const readline = require("readline");
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+(async () => {
+    await client.start({
+        phoneNumber: async () => await rl.question('Please enter your number: '),
+        password: async () => await rl.question('Please enter your password: '),
+        phoneCode: async () => await rl.question('Please enter the code you received: '),
+        onError: (err) => logger.error('Telegram client error:', err),
+    });
+    logger.log('You should now be connected.');
+    logger.log('Your session string is:', client.session.save());
+    await client.disconnect();
+    process.exit(0);
+})();
+*/
 
 // await client.sendMessage("me", { message: "Hello!" });
 
@@ -40,17 +41,19 @@ client.start({
 
 
 async function getAvailableChanel() {
-    await client.connect();
-
-    const dialogs = await client.getDialogs();
-
-    // Фильтрация только каналов
-    const channels = dialogs.filter((dialog) => dialog.isChannel);
-    // console.log('chanel', channels); // prints the result
-    console.log('Channels:');
-    channels.forEach((channel) => {
-        console.log(`Name: ${channel.title}, ID: ${channel.id}`);
-    });
+    try {
+        if (!client.connected) {
+            await client.connect();
+        }
+        const dialogs = await client.getDialogs();
+        const channels = dialogs.filter((dialog) => dialog.isChannel);
+        logger.log('Available Channels:');
+        channels.forEach((channel) => {
+            logger.log(`Name: ${channel.title}, ID: ${channel.id}`);
+        });
+    } catch (error) {
+        logger.error('Failed to get available channels:', error);
+    }
 }
 
 let cache = new Map();
@@ -77,7 +80,7 @@ function removeOldMessages() {
 
         if (updatedMessages.length < old_length) {
             cache.set(chatId, updatedMessages);
-            console.log(`Очистка кэша для чата ${chatId}: удалено ${old_length - updatedMessages.length} старых сообщений.`);
+            logger.log(`Cache cleanup for chat ${chatId}: removed ${old_length - updatedMessages.length} old messages.`);
         }
     });
 }
@@ -85,16 +88,26 @@ function removeOldMessages() {
 // Запускаем очистку каждый час.
 setInterval(removeOldMessages, 60 * 60 * 1000);
 
+client.addEventHandler((event) => {
+    // Логируем любые события, особенно отключения, чтобы понимать, что происходит
+    if (event.className === 'UpdateConnectionState') {
+        logger.warn('Telegram connection state changed:', event.state);
+    }
+});
+
 async function getMessagesForPeriod(fromTime) {
     // To make the cache key stable, we round the timestamp to the nearest minute.
     // The original `fromTime` is still used for the final filtering to ensure accuracy.
     const roundedFromTime = Math.floor(fromTime / 60) * 60;
+    logger.log(`Fetching messages for period from ${new Date(fromTime * 1000).toISOString()}`);
 
-    const chatNezlamnosti = await getMessagesFromChatCached(-1001746152256, roundedFromTime);
-    const yamiTuchi = await getMessagesFromChatCached(-1001886888533, roundedFromTime);
+    const [chatNezlamnosti, yamiTuchi] = await Promise.all([
+        getMessagesFromChatCached(-1001746152256, roundedFromTime),
+        getMessagesFromChatCached(-1001886888533, roundedFromTime)
+    ]);
 
-    const mergedArray = [...chatNezlamnosti, ...yamiTuchi];
-    mergedArray.sort((a, b) => a.date - b.date);
+    const mergedArray = [...(chatNezlamnosti || []), ...(yamiTuchi || [])];
+    mergedArray.sort((a, b) => a.date - b.date); // Сортируем сообщения по дате
 
     // The final filtering is still necessary because the cache might contain messages
     // from a previous, wider request, and we only want to return what was asked for now.
@@ -102,69 +115,73 @@ async function getMessagesForPeriod(fromTime) {
 }
 
 async function getMessagesFromChatCached(chatId, fromTime) {
-    let chatArray = cache.get(chatId) || [];
-    const meta = cacheMetadata.get(chatId) || {
-        lastUpdate: 0
-    };
+    const fetchStartTime = Date.now();
+    try {
+        let chatArray = cache.get(chatId) || [];
+        const meta = cacheMetadata.get(chatId) || { lastUpdate: 0 };
 
-    const newestCachedMessage = chatArray.length > 0 ? chatArray[chatArray.length - 1] : null;
-    const oldestCachedMessage = chatArray.length > 0 ? chatArray[0] : null;
+        const newestCachedMessage = chatArray.length > 0 ? chatArray[chatArray.length - 1] : null;
+        const oldestCachedMessage = chatArray.length > 0 ? chatArray[0] : null;
 
-    const now = Date.now();
-    let newMessages = [];
-    let olderMessages = [];
-    let performedFetchForNew = false;
+        const now = Date.now();
+        let newMessages = [];
+        let olderMessages = [];
+        let performedFetchForNew = false;
 
-    // Случай 1: Кэш пуст. Выполняем первоначальную загрузку.
-    if (!oldestCachedMessage) {
-        olderMessages = await getMessagesFromChat(chatId, {
-            minDate: fromTime
-        });
-        performedFetchForNew = true; // Мы загрузили все, включая новые
-    } else {
-        // Случай 2: В кэше есть данные. Загружаем обновления.
+        // Случай 1: Кэш пуст. Выполняем первоначальную загрузку.
+        if (!oldestCachedMessage) {
+            logger.log(`Cache empty for chat ${chatId}. Performing initial fetch.`);
+            olderMessages = await getMessagesFromChat(chatId, { minDate: fromTime });
+            performedFetchForNew = true; // Мы загрузили все, включая новые
+        } else {
+            // Случай 2: В кэше есть данные. Загружаем обновления.
 
-        // 2a. Загружаем новые сообщения, только если кэш "устарел" (старше 60 секунд)
-        // Это предотвращает слишком частые запросы к API.
-        if (now - meta.lastUpdate > 60000) {
-            newMessages = await getMessagesFromChat(chatId, {
-                minId: newestCachedMessage.id
-            });
-            performedFetchForNew = true;
+            // 2a. Загружаем новые сообщения, только если кэш "устарел" (старше 60 секунд)
+            if (now - meta.lastUpdate > 60000) {
+                logger.log(`Cache stale for chat ${chatId}. Fetching new messages.`);
+                newMessages = await getMessagesFromChat(chatId, { minId: newestCachedMessage.id });
+                performedFetchForNew = true;
+            }
+
+            // 2b. Загружаем более старые сообщения, если они требуются для запроса
+            if (fromTime < oldestCachedMessage.date) {
+                logger.log(`Request requires older messages for chat ${chatId}. Fetching.`);
+                olderMessages = await getMessagesFromChat(chatId, {
+                    maxId: oldestCachedMessage.id,
+                    minDate: fromTime,
+                });
+            }
         }
 
-        // 2b. Загружаем более старые сообщения, если они требуются для запроса
-        if (fromTime < oldestCachedMessage.date) {
-            olderMessages = await getMessagesFromChat(chatId, {
-                maxId: oldestCachedMessage.id,
-                minDate: fromTime,
-            });
+        // 3. Если мы что-то загрузили, обновляем кэш и метаданные
+        if (newMessages.length > 0 || olderMessages.length > 0) {
+            logger.log(`Updating cache for chat ${chatId}. New: ${newMessages.length}, Older: ${olderMessages.length}`);
+            const allMessages = [...olderMessages, ...chatArray, ...newMessages];
+
+            // Дедупликация, сортировка и обновление кэша
+            const messageMap = new Map();
+            allMessages.forEach(msg => messageMap.set(msg.id, msg));
+            const uniqueMessages = Array.from(messageMap.values());
+            uniqueMessages.sort((a, b) => a.date - b.date);
+
+            cache.set(chatId, uniqueMessages);
+            if (performedFetchForNew) {
+                cacheMetadata.set(chatId, { lastUpdate: now });
+            }
+
+            logger.log(`getMessagesFromChatCached for chat ${chatId} took ${Date.now() - fetchStartTime}ms. Returning ${uniqueMessages.length} messages.`);
+            return uniqueMessages;
         }
+
+        // 4. Если ничего не загружали, просто возвращаем существующий кэш
+        logger.log(`getMessagesFromChatCached for chat ${chatId} took ${Date.now() - fetchStartTime}ms. Returning ${chatArray.length} messages from cache.`);
+        return chatArray;
+
+    } catch (error) {
+        logger.error(`Failed to get messages for chat ${chatId}:`, error);
+        // В случае ошибки возвращаем то, что есть в кэше, чтобы не обрушить приложение
+        return cache.get(chatId) || [];
     }
-
-    // 3. Если мы что-то загрузили, обновляем кэш и метаданные
-    if (newMessages.length > 0 || olderMessages.length > 0) {
-        const allMessages = [...olderMessages, ...chatArray, ...newMessages];
-
-        // Дедупликация, сортировка и обновление кэша
-        const messageMap = new Map();
-        allMessages.forEach(msg => messageMap.set(msg.id, msg));
-        const uniqueMessages = Array.from(messageMap.values());
-        uniqueMessages.sort((a, b) => a.date - b.date);
-
-        cache.set(chatId, uniqueMessages);
-        // Обновляем метку времени, только если мы проверяли наличие новых сообщений
-        if (performedFetchForNew) {
-            cacheMetadata.set(chatId, {
-                lastUpdate: now
-            });
-        }
-
-        return uniqueMessages;
-    }
-
-    // 4. Если ничего не загружали, просто возвращаем существующий кэш
-    return chatArray;
 }
 
 /**
@@ -177,37 +194,47 @@ async function getMessagesFromChatCached(chatId, fromTime) {
  * @returns {Promise<Array>} A promise that resolves to an array of messages.
  */
 async function getMessagesFromChat(chatId, { minId, maxId, minDate } = {}) {
-    const chat = await client.getEntity(chatId);
-    const limit = 100;
-    let buffer = [];
-
-    // Fetching newer messages (minId is specified)
-    if (minId) {
-        const messages = await client.getMessages(chat, { limit: 100, minId }); // Use a reasonable limit, as requested
-        return messages.reverse();
-    }
-
-    // Fetching older messages (maxId or no id specified)
-    let offsetId = maxId || 0;
-    while (true) {
-        const messages = await client.getMessages(chat, { limit, offsetId });
-
-        if (messages.length === 0) break;
-
-        let stop = false;
-        for (const message of messages) {
-            if (minDate && message.date < minDate) {
-                stop = true;
-                break;
-            }
-            buffer.push(message);
+    try {
+        if (!client.connected) {
+            logger.log('Telegram client not connected. Connecting...');
+            await client.connect();
         }
 
-        if (stop) break;
+        const chat = await client.getEntity(chatId);
+        const limit = 100;
+        let buffer = [];
 
-        offsetId = messages[messages.length - 1].id;
+        // Fetching newer messages (minId is specified)
+        if (minId) {
+            const messages = await client.getMessages(chat, { limit: 100, minId });
+            return messages.reverse();
+        }
+
+        // Fetching older messages (maxId or no id specified)
+        let offsetId = maxId || 0;
+        while (true) {
+            const messages = await client.getMessages(chat, { limit, offsetId });
+
+            if (messages.length === 0) break;
+
+            let stop = false;
+            for (const message of messages) {
+                if (minDate && message.date < minDate) {
+                    stop = true;
+                    break;
+                }
+                buffer.push(message);
+            }
+
+            if (stop) break;
+
+            offsetId = messages[messages.length - 1].id;
+        }
+        return buffer.reverse();
+    } catch (error) {
+        logger.error(`Error in getMessagesFromChat for chat ${chatId}:`, error);
+        throw error; // Пробрасываем ошибку выше, чтобы ее обработал getMessagesFromChatCached
     }
-    return buffer.reverse();
 }
 
 
