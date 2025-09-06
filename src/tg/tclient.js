@@ -153,6 +153,12 @@ async function getMessagesFromChatCached(chatId, fromTime) {
             }
         }
 
+        // Если мы проверяли наличие новых сообщений, нужно обновить временную метку,
+        // даже если новых сообщений не найдено.
+        if (performedFetchForNew) {
+            cacheMetadata.set(chatId, { lastUpdate: now });
+        }
+
         // 3. Если мы что-то загрузили, обновляем кэш и метаданные
         if (newMessages.length > 0 || olderMessages.length > 0) {
             logger.log(`Updating cache for chat ${chatId}. New: ${newMessages.length}, Older: ${olderMessages.length}`);
@@ -165,16 +171,13 @@ async function getMessagesFromChatCached(chatId, fromTime) {
             uniqueMessages.sort((a, b) => a.date - b.date);
 
             cache.set(chatId, uniqueMessages);
-            if (performedFetchForNew) {
-                cacheMetadata.set(chatId, { lastUpdate: now });
-            }
 
-            logger.log(`getMessagesFromChatCached for chat ${chatId} took ${Date.now() - fetchStartTime}ms. Returning ${uniqueMessages.length} messages.`);
+            logger.log(`getMessagesFromChatCached for chat ${chatId} took ${Date.now() - fetchStartTime}ms. Returning ${uniqueMessages.length} messages after update.`);
             return uniqueMessages;
         }
 
         // 4. Если ничего не загружали, просто возвращаем существующий кэш
-        logger.log(`getMessagesFromChatCached for chat ${chatId} took ${Date.now() - fetchStartTime}ms. Returning ${chatArray.length} messages from cache.`);
+        logger.log(`getMessagesFromChatCached for chat ${chatId} took ${Date.now() - fetchStartTime}ms. Returning ${chatArray.length} messages from existing cache.`);
         return chatArray;
 
     } catch (error) {
