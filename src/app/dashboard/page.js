@@ -62,7 +62,7 @@ function Page() {
     const isAdmin = session?.user?.role === 'admin';
 
     return (
-        <div>
+        <div className='w-full px-4'>
             <h1>Dashboard</h1>
             <p>Добро пожаловать, {session?.user?.email}!</p>
             <button onClick={() => signOut()}>Выйти</button>
@@ -93,9 +93,9 @@ function Page() {
                     <tbody>
                         {users.map(user => (
                             <tr key={user.id} style={{ borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '8px' }}>{user.id}</td>
-                                <td style={{ padding: '8px' }}>{user.email}</td>
-                                <td style={{ padding: '8px' }}>
+                                <td className='text-left' style={{ padding: '8px' }}>{user.id}</td>
+                                <td className='text-left' style={{ padding: '8px' }}>{user.email}</td>
+                                <td className='text-left' style={{ padding: '8px' }}>
                                     <select className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 disabled:opacity-30' value={user.role} onChange={(e) => handleRoleChange(user.id, e.target.value)} disabled={user.id.toString() === session.user.id}>
                                         <option value="admin">admin</option>
                                         <option value="user">user</option>

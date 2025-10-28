@@ -22,7 +22,7 @@ const withRoleAuth = (WrappedComponent, allowedRoles) => {
         }, [session, status, router]);
 
         if (status === 'loading') {
-            return <div>Loading...</div>;
+            return <div className='text-center w-full'>Loading...</div>;
         }
 
         if (status === 'unauthenticated') {

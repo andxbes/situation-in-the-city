@@ -114,11 +114,11 @@ function FilterEditorPage() {
     };
 
     return (
-        <div className="bg-gray-100 dark:bg-gray-900" onMouseUp={handleMouseUp}>
+        <div className="bg-gray-100 dark:bg-gray-900 container mx-auto w-full" onMouseUp={handleMouseUp}>
             <SelectionMenu selection={selection} onAddKeyword={handleAddKeyword} onClose={() => setSelection({ show: false })} />
-            <div className="container mx-auto p-4 flex flex-col lg:flex-row gap-4 lg:h-screen">
+            <div className=" p-4 flex flex-col lg:flex-row gap-4 lg:h-screen w-full">
                 {/* Messages Column */}
-                <div className="flex-grow lg:w-2/3 flex flex-col">
+                <div className="flex-grow lg:w-2/3 flex flex-col max-w-full w-full">
                     <header className="mb-4 flex-shrink-0">
                         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Редактор фильтров</h1>
                         <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm mt-2">
@@ -146,7 +146,7 @@ function FilterEditorPage() {
                             </div>
                         </div>
                     </header>
-                    <main ref={mainContainerRef} className="custom-scrollbar flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800">
+                    <main ref={mainContainerRef} className="custom-scrollbar flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800 container w-full">
                         {loading && <div className="text-center">Загрузка...</div>}
                         {error && <div className="text-center text-red-500">Ошибка: {error}</div>}
                         {!loading && !error && (
