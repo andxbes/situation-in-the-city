@@ -62,7 +62,7 @@ function Page() {
     const isAdmin = session?.user?.role === 'admin';
 
     return (
-        <div className='w-full px-4'>
+        <div className='w-full'>
             <h1>Dashboard</h1>
             <p>Добро пожаловать, {session?.user?.email}!</p>
             <button onClick={() => signOut()}>Выйти</button>
