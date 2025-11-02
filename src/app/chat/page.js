@@ -84,12 +84,12 @@ function ChatPage() {
     const isAdmin = session?.user?.role === 'admin';
 
     return (
-        <div className="bg-gray-100 dark:bg-gray-900">
-            <div className="container mx-auto p-4 flex flex-col h-screen">
-                <header className="mb-4 flex-shrink-0">
+        <div className="bg-gray-100 dark:bg-gray-900 w-full">
+            <div className="mx-auto p-4 flex flex-col w-full h-screen">
+                <header className="mb-4 flex-shrink-0 w-full">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Сообщения из чата</h1>
-                    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm mt-2">
-                        <div className="flex items-center justify-between gap-4">
+                    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm mt-2 w-full">
+                        <div className="flex items-center justify-between gap-4 w-full">
                             <div>
                                 <label htmlFor="hours-slider" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Период: {hours} {getHourWord(hours)}
@@ -119,7 +119,7 @@ function ChatPage() {
                 <main
                     ref={scrollRef}
                     onScroll={handleScroll}
-                    className="custom-scrollbar flex-1 lg:w-3xl max-w-full overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800"
+                    className="custom-scrollbar w-full flex-1  max-w-full overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800"
                 >
                     {loading && <div className="flex h-full items-center justify-center"><div className="text-gray-500 dark:text-gray-400">Загрузка сообщений...</div></div>}
                     {error && <div className="flex justify-center items-center h-full"><div className="text-center text-red-500 bg-red-100 dark:bg-red-900/20 dark:text-red-300 p-3 rounded-md">Ошибка: {error}</div></div>}

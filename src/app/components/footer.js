@@ -9,7 +9,7 @@ export default function Footer(params) {
     return (
         <>
             <footer className="z-10 m-4 bg-[rgba(0_0_0_0)]">
-                <div className="w-full mx-auto bg-white  rounded-lg dark:bg-gray-800 max-w-screen-xl p-4 md:flex md:items-center md:justify-between">
+                <div className="container w-full mx-auto bg-white  rounded-lg dark:bg-gray-800  p-4 md:flex md:items-center md:justify-between">
                     <span className="text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2023 <Link href="/" className="hover:underline">Sitename™</Link>. All Rights Reserved.
                     </span>
                     <div className="flex items-center mt-3 md:mt-0">

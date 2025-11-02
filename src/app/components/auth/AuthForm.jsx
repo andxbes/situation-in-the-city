@@ -10,7 +10,7 @@ export default function AuthForm({ handleSubmit, textButton, children, changeFor
 
         <>
 
-            <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+            <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8 mx-auto">
                 <div className="sm:mx-auto sm:w-full sm:max-w-md">
                     <Image
                         alt="Situation in the city"
