@@ -21,7 +21,7 @@ function ChatPage() {
         }
         setError(null);
         try {
-            const response = await fetch(`/api/messages?hours=${hours}`);
+            const response = await fetch(`/api/messages/?hours=${hours}`);
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to fetch messages');
