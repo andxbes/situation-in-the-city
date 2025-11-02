@@ -84,7 +84,7 @@ function ChatPage() {
     const isAdmin = session?.user?.role === 'admin';
 
     return (
-        <div className="bg-gray-100 dark:bg-gray-900 w-full">
+        <div className="bg-gray-100 dark:bg-gray-900 w-full rounded-lg">
             <div className="mx-auto p-4 flex flex-col w-full h-screen">
                 <header className="mb-4 flex-shrink-0 w-full">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Сообщения из чата</h1>

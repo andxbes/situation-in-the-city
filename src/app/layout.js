@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
         <Providers>
           <div className="flex flex-col min-h-screen relative">
             <MatrixBackground color='#00FFFF' />
-            <main className="z-10 flex grow flex-col h-full gap-[32px] justify-center place-items-center items-center sm:items-start  container w-full text-center mx-auto">
+            <main className="z-10 px-4 flex grow flex-col h-full gap-[32px] justify-center place-items-center items-center sm:items-start  container w-full text-center mx-auto">
               {children}
             </main>
             <Footer />

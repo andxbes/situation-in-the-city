@@ -26,6 +26,10 @@ body {
 }
 
 @layer utilities {
+  .container {
+    @apply max-w-4xl;
+  }
+
   /* Стили для Webkit-браузеров (Chrome, Safari, Edge) */
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
