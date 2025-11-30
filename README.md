@@ -22,7 +22,7 @@ sshd
 https://wiki.termux.com/wiki/Termux:Boot 
 
 и затем мы можем спокойно работать с консоли с пк с приставкой , юзера нет 
-`ssh -p 8022  IP_адрес_устройства_Termux`
+`ssh -p 8022  192.168.1.61`
 
 ## Run in termux 
 
