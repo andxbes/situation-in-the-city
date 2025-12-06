@@ -8,6 +8,7 @@ import Providers from "./providers";
 import MatrixBackground from "./components/MatrixBackground";
 import ParticlesBackground from "./components/ParticlesBackground";
 import OilBlobsBackground from "./components/OilBlobsBackground";
+import SnowfallBackground from "./components/SnowfallBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +24,7 @@ const geistMono = Geist_Mono({
 // You can move it to a metadata object if needed for SEO, but for this functionality, we need a client component.
 
 export default function RootLayout({ children }) {
-  const backgroundOptions = ['matrix', 'particles', 'oil'];
+  const backgroundOptions = ['matrix', 'particles', 'oil', 'snow'];
   const [background, setBackground] = useState(backgroundOptions[0]);
 
   // При монтировании компонента на клиенте, проверяем localStorage
@@ -58,6 +59,7 @@ export default function RootLayout({ children }) {
               {background === 'matrix' && <MatrixBackground color='#00FFFF' />}
               {background === 'particles' && <ParticlesBackground color='#00FF00' />}
               {background === 'oil' && <OilBlobsBackground />}
+              {background === 'snow' && <SnowfallBackground />}
             </div>
             <main className="z-10 px-4 flex grow flex-col h-full gap-[32px] justify-center place-items-center items-center sm:items-start  container w-full text-center mx-auto">
               {children}
