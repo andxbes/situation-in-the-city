@@ -7,6 +7,7 @@ import Footer from "./components/footer";
 import Providers from "./providers";
 import MatrixBackground from "./components/MatrixBackground";
 import ParticlesBackground from "./components/ParticlesBackground";
+import OilBlobsBackground from "./components/OilBlobsBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,18 +23,23 @@ const geistMono = Geist_Mono({
 // You can move it to a metadata object if needed for SEO, but for this functionality, we need a client component.
 
 export default function RootLayout({ children }) {
-  const [background, setBackground] = useState('matrix');
+  const backgroundOptions = ['matrix', 'particles', 'oil'];
+  const [background, setBackground] = useState(backgroundOptions[0]);
 
   // При монтировании компонента на клиенте, проверяем localStorage
   useEffect(() => {
     const savedBackground = localStorage.getItem('background-theme');
-    if (savedBackground) {
+    // Убедимся, что сохраненное значение валидно
+    if (savedBackground && backgroundOptions.includes(savedBackground)) {
       setBackground(savedBackground);
     }
   }, []); // Пустой массив зависимостей гарантирует, что эффект выполнится один раз
 
   const toggleBackground = () => {
-    const newBackground = background === 'matrix' ? 'particles' : 'matrix';
+    const currentIndex = backgroundOptions.indexOf(background);
+    const nextIndex = (currentIndex + 1) % backgroundOptions.length;
+    const newBackground = backgroundOptions[nextIndex];
+
     setBackground(newBackground);
     // Сохраняем выбор в localStorage
     localStorage.setItem('background-theme', newBackground);
@@ -51,6 +57,7 @@ export default function RootLayout({ children }) {
             <div onClick={toggleBackground} className="absolute top-0 left-0 w-full h-full cursor-pointer">
               {background === 'matrix' && <MatrixBackground color='#00FFFF' />}
               {background === 'particles' && <ParticlesBackground color='#00FF00' />}
+              {background === 'oil' && <OilBlobsBackground />}
             </div>
             <main className="z-10 px-4 flex grow flex-col h-full gap-[32px] justify-center place-items-center items-center sm:items-start  container w-full text-center mx-auto">
               {children}

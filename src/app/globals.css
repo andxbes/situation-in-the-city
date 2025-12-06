@@ -58,3 +58,50 @@ body {
     scrollbar-color: theme("colors.gray.600") theme("colors.gray.900");
   }
 }
+
+@layer utilities {
+  .blob-1 {
+    top: 20%;
+    left: 20%;
+    animation: move 15s infinite alternate;
+  }
+
+  .blob-2 {
+    top: 60%;
+    left: 60%;
+    animation: move 18s infinite alternate-reverse;
+  }
+
+  .blob-3 {
+    top: 40%;
+    left: 40%;
+    animation: move 20s infinite alternate;
+  }
+
+  .blob-4 {
+    top: 70%;
+    left: 10%;
+    animation: move 22s infinite alternate-reverse;
+  }
+
+  .blob-5 {
+    top: 10%;
+    left: 80%;
+    animation: move 17s infinite alternate;
+  }
+
+  .blob-6 {
+    top: 80%;
+    left: 45%;
+    animation: move 19s infinite alternate-reverse;
+  }
+}
+
+@keyframes move {
+  from {
+    transform: translate(-100px, -50px) rotate(-90deg);
+  }
+  to {
+    transform: translate(100px, 100px) rotate(90deg);
+  }
+}
