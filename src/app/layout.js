@@ -55,7 +55,7 @@ export default function RootLayout({ children }) {
       <body className={`${geistSans.variable} ${geistMono.variable}  antialiased h-full`}>
         <Providers>
           <div className="flex flex-col min-h-screen relative">
-            <div onClick={toggleBackground} className="absolute top-0 left-0 w-full h-full cursor-pointer">
+            <div onClick={toggleBackground} className="absolute top-0 left-0 w-full h-full cursor-pointer -z-10">
               {background === 'matrix' && <MatrixBackground color='#00FFFF' />}
               {background === 'particles' && <ParticlesBackground color='#00FF00' />}
               {background === 'oil' && <OilBlobsBackground />}

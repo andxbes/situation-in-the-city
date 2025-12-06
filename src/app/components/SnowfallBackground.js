@@ -23,7 +23,7 @@ const SnowfallBackground = () => {
         () => ({
             background: {
                 color: {
-                    value: "transparent",
+                    value: "#000000",
                 },
             },
             fpsLimit: 60,
@@ -56,8 +56,16 @@ const SnowfallBackground = () => {
                 },
                 number: { density: { enable: true, area: 800 }, value: 200 },
                 opacity: { value: { min: 0.3, max: 0.8 } },
-                shape: { type: "circle" },
-                size: { value: { min: 1, max: 4 } },
+                shape: {
+                    type: "character",
+                    options: {
+                        character: {
+                            value: "❄️",
+                            font: "Verdana"
+                        }
+                    }
+                },
+                size: { value: { min: 2, max: 12 } },
             },
             detectRetina: true,
         }),
@@ -65,7 +73,7 @@ const SnowfallBackground = () => {
     );
 
     if (init) {
-        return <Particles id="snowfall" particlesLoaded={particlesLoaded} options={options} className="absolute top-0 left-0 w-full h-full -z-10" />;
+        return <Particles id="snowfall" particlesLoaded={particlesLoaded} options={options} className="absolute top-0 left-0 w-full h-full -z-20" />;
     }
 
     return <></>;
