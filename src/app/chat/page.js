@@ -108,7 +108,7 @@ function ChatPage() {
                             {meta && (
                                 <div className="text-xs text-gray-500 dark:text-gray-400 text-right">
                                     <div>Найдено: {meta.totalFound}</div>
-                                    <div>Отфильтровано: {meta.filteredCount}</div>
+                                    <div>Показано: {meta.filteredCount}</div>
                                     <div>Запрос: {meta.processingTimeMs}ms</div>
                                 </div>
                             )}
