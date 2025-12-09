@@ -46,7 +46,7 @@ cd situation-in-the-city
 npm i 
 nano .env 
 npm run build 
-#npm run start
+#npm run start &!
 ```
 
 `nano ~/.termux/boot/start-sshd` 
