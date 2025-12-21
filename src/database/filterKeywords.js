@@ -157,7 +157,8 @@ const runFilterKeywordsMigrations = () => {
         return; // Миграции не нужны, если таблицы еще нет
     }
 
-    const columns = query("PRAGMA table_info(filter_keywords)");
+    let migrationsRun = false;
+    let columns = query("PRAGMA table_info(filter_keywords)");
 
     // Миграция 1: Изменение типа колонки 'type' с TEXT на BOOLEAN
     const typeColumn = columns.find(col => col.name === 'type');
@@ -179,16 +180,29 @@ const runFilterKeywordsMigrations = () => {
             execute("DROP TABLE filter_keywords_old");
         })();
         console.log("'type' column migrated successfully.");
+        // После миграции структура таблицы изменилась, нужно перечитать информацию о колонках
+        columns = query("PRAGMA table_info(filter_keywords)");
+        migrationsRun = true;
     }
 
     // Миграция 2: Добавление колонки 'stat_type_id'
     const hasStatTypeIdColumn = columns.some(col => col.name === 'stat_type_id');
     if (!hasStatTypeIdColumn) {
         console.log("Adding 'stat_type_id' column to 'filter_keywords' table...");
-        execute('ALTER TABLE filter_keywords ADD COLUMN stat_type_id INTEGER REFERENCES keyword_stat_types(id) ON DELETE SET NULL');
-        const alertTypeId = getOne("SELECT id FROM keyword_stat_types WHERE name = 'alert'")?.id;
-        execute("UPDATE filter_keywords SET stat_type_id = ? WHERE type = 1", [alertTypeId]);
-        console.log("Column 'stat_type_id' added and populated for positive keywords.");
+        db.transaction(() => {
+            execute('ALTER TABLE filter_keywords ADD COLUMN stat_type_id INTEGER REFERENCES keyword_stat_types(id) ON DELETE SET NULL');
+            const alertTypeId = getOne("SELECT id FROM keyword_stat_types WHERE name = 'alert'")?.id;
+            execute("UPDATE filter_keywords SET stat_type_id = ? WHERE type = 1", [alertTypeId]);
+            console.log("Column 'stat_type_id' added and populated for positive keywords.");
+            migrationsRun = true;
+        })();
+    }
+
+    // Если были выполнены миграции, оптимизируем файл базы данных
+    if (migrationsRun) {
+        console.log("Running database optimization (VACUUM)...");
+        execute("VACUUM;");
+        console.log("Database optimization complete.");
     }
 };
 
