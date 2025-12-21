@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import withRoleAuth from '../components/ProtectedRoute';
+import KeywordEditorModal from '../components/filter-editor/KeywordEditorModal';
 import HighlightedMessage from '../components/filter-editor/HighlightedMessage';
 import SelectionMenu from '../components/filter-editor/SelectionMenu';
 
@@ -24,11 +25,13 @@ function getHourWord(number) {
 function FilterEditorPage() {
     const [messages, setMessages] = useState([]);
     const [keywords, setKeywords] = useState([]);
+    const [statTypes, setStatTypes] = useState([]);
     const [meta, setMeta] = useState(null);
     const [hours, setHours] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selection, setSelection] = useState({ show: false, text: '', x: 0, y: 0 });
+    const [editingKeyword, setEditingKeyword] = useState(null); // null | {} | { id, ... }
 
     const mainContainerRef = useRef(null);
 
@@ -59,11 +62,23 @@ function FilterEditorPage() {
         }
     }, []);
 
+    const fetchStatTypes = useCallback(async () => {
+        try {
+            const response = await fetch('/api/filters/stat-types');
+            if (!response.ok) throw new Error('Failed to fetch stat types');
+            const data = await response.json();
+            setStatTypes(data);
+        } catch (err) {
+            setError(p => p ? `${p}, ${err.message}` : err.message);
+        }
+    }, []);
+
     useEffect(() => {
         fetchMessages();
     }, [fetchMessages]);
 
     useEffect(() => {
+        fetchStatTypes();
         fetchKeywords();
     }, [fetchKeywords]);
 
@@ -83,19 +98,21 @@ function FilterEditorPage() {
         }
     };
 
-    const handleAddKeyword = async (text, type) => {
+    const handleSaveKeyword = async (keywordData) => {
+        const isNew = !keywordData.id;
+        const url = isNew ? '/api/filters/keywords' : `/api/filters/${keywordData.id}`;
+        const method = isNew ? 'POST' : 'PUT';
+
         try {
-            const response = await fetch('/api/filters/keywords', {
-                method: 'POST',
+            const response = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ keyword: text, type, is_regex: 0 }),
+                body: JSON.stringify(keywordData),
             });
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.message || 'Failed to add keyword');
-            }
-            await fetchKeywords(); // Re-fetch keywords to update highlighting
-            setSelection({ show: false, text: '', x: 0, y: 0 });
+            if (!response.ok) throw new Error(await response.text());
+
+            await fetchKeywords();
+            setEditingKeyword(null); // Close modal on success
         } catch (err) {
             alert(`Error: ${err.message}`);
         }
@@ -113,9 +130,21 @@ function FilterEditorPage() {
         }
     };
 
+    const handleAddKeywordFromSelection = async (text, type) => {
+        await handleSaveKeyword({ keyword: text, type, is_regex: 0, stat_type_id: null });
+        setSelection({ show: false, text: '', x: 0, y: 0 });
+    };
+
+    const openNewKeywordModal = () => {
+        setEditingKeyword({
+            keyword: '', type: 'positive', is_regex: 0, stat_type_id: ''
+        });
+    };
+
     return (
         <div className="bg-gray-100 dark:bg-gray-900 container mx-auto w-full" onMouseUp={handleMouseUp}>
-            <SelectionMenu selection={selection} onAddKeyword={handleAddKeyword} onClose={() => setSelection({ show: false })} />
+            {editingKeyword && <KeywordEditorModal keyword={editingKeyword} statTypes={statTypes} onSave={handleSaveKeyword} onClose={() => setEditingKeyword(null)} />}
+            <SelectionMenu selection={selection} onAddKeyword={handleAddKeywordFromSelection} onClose={() => setSelection({ show: false })} />
             <div className=" p-4 flex flex-col lg:flex-row gap-4 lg:h-screen w-full">
                 {/* Messages Column */}
                 <div className="flex-grow lg:w-2/3 flex flex-col max-w-full w-full">
@@ -171,7 +200,14 @@ function FilterEditorPage() {
 
                 {/* Keywords Column */}
                 <div className="flex-shrink-0 lg:w-[40%] flex flex-col">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Ключевые слова</h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-bold text-gray-800 dark:text-white">Ключевые слова</h2>
+                        <button
+                            onClick={openNewKeywordModal}
+                            className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
+                            Добавить
+                        </button>
+                    </div>
                     <div className="custom-scrollbar flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800">
                         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -195,7 +231,8 @@ function FilterEditorPage() {
                                             </button>
                                         </td>
                                         <td className="px-2 py-2 align-middle">
-                                            <span
+                                            <button
+                                                onClick={() => setEditingKeyword(kw)}
                                                 className={`px-3 py-1 text-sm font-mono rounded-full w-full inline-block ${kw.type === 'positive'
                                                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                                     : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
@@ -203,7 +240,7 @@ function FilterEditorPage() {
                                                 title={`Тип: ${kw.type}${kw.is_regex ? ' (Регулярное выражение)' : ''}`}
                                             >
                                                 {kw.keyword}
-                                            </span>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}

@@ -324,6 +324,13 @@ export const getAllFilterKeywords = () => {
 };
 
 /**
+ * Получает все типы статистики для ключевых слов.
+ * @returns {Array<{id: number, name: string}>}
+ */
+export const getKeywordStatTypes = () => {
+    return query("SELECT id, name FROM keyword_stat_types ORDER BY name");
+};
+/**
  * Добавляет новое ключевое слово в базу данных.
  * @param {{keyword: string, type: string, is_regex: number}} data
  * @returns {import('better-sqlite3').RunResult}
@@ -332,11 +339,18 @@ export const addFilterKeyword = ({ keyword, type, is_regex = 0, stat_type_id = n
     if (!keyword || !type) {
         throw new Error("Keyword and type are required.");
     }
-    const isPositive = type === 'positive';
+    const isPositiveType = type === 'positive';
+    let final_stat_type_id = stat_type_id;
+
+    // Если  stat_type_id не указан, устанавливаем 'alert' по умолчанию
+    if (final_stat_type_id === null || final_stat_type_id === '') {
+        final_stat_type_id = getOne("SELECT id FROM keyword_stat_types WHERE name = 'alert'")?.id;
+    }
+
     try {
         return execute(
             "INSERT INTO filter_keywords (keyword, type, is_regex, stat_type_id) VALUES (?, ?, ?, ?)",
-            [keyword.trim(), Number(isPositive), is_regex, stat_type_id]
+            [keyword.trim(), Number(isPositiveType), is_regex, final_stat_type_id]
         );
     } catch (error) {
         if (error.message.includes("UNIQUE constraint failed")) {
@@ -351,6 +365,38 @@ export const addFilterKeyword = ({ keyword, type, is_regex = 0, stat_type_id = n
 export const deleteFilterKeyword = (id) => {
     if (!id) throw new Error("ID is required to delete a keyword.");
     return execute("DELETE FROM filter_keywords WHERE id = ?", [id]);
+};
+
+/**
+ * Обновляет существующее ключевое слово.
+ * @param {{id: number, keyword: string, type: string, is_regex: number, stat_type_id: number | null}} data
+ * @returns {import('better-sqlite3').RunResult}
+ */
+export const updateFilterKeyword = ({ id, keyword, type, is_regex, stat_type_id }) => {
+    if (!id || !keyword || !type) {
+        throw new Error("ID, keyword, and type are required for update.");
+    }
+    const isPositiveType = type === 'positive';
+    let final_stat_type_id = stat_type_id;
+
+    // Если тип положительный и stat_type_id не указан (например, при смене с negative на positive),
+    // устанавливаем 'alert' по умолчанию.
+    if (final_stat_type_id === null || final_stat_type_id === '') {
+        final_stat_type_id = getOne("SELECT id FROM keyword_stat_types WHERE name = 'alert'")?.id;
+    }
+    try {
+        return execute(
+            "UPDATE filter_keywords SET keyword = ?, type = ?, is_regex = ?, stat_type_id = ? WHERE id = ?",
+            [keyword.trim(), Number(isPositiveType), is_regex, final_stat_type_id, id]
+        );
+    } catch (error) {
+        if (error.message.includes("UNIQUE constraint failed")) {
+            const err = new Error(`Keyword "${keyword}" already exists.`);
+            err.code = "SQLITE_CONSTRAINT_UNIQUE";
+            throw err;
+        }
+        throw error;
+    }
 };
 
 

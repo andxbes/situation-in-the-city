@@ -21,12 +21,12 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
         try {
-            const { keyword, type, is_regex } = req.body;
+            const { keyword, type, is_regex, stat_type_id } = req.body;
             if (!keyword || !type) {
                 return res.status(400).json({ message: 'Keyword and type are required.' });
             }
 
-            const result = addFilterKeyword({ keyword, type, is_regex: is_regex ? 1 : 0 });
+            const result = addFilterKeyword({ keyword, type, is_regex: is_regex ? 1 : 0, stat_type_id });
             return res.status(201).json({ message: 'Keyword added successfully', id: result.lastInsertRowid });
         } catch (error) {
             if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
