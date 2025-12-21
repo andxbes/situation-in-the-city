@@ -165,18 +165,26 @@ const runFilterKeywordsMigrations = () => {
     if (typeColumn && typeColumn.type === 'TEXT') {
         console.log("Migrating 'filter_keywords.type' column from TEXT to BOOLEAN...");
         db.transaction(() => {
+            const oldColumns = query("PRAGMA table_info(filter_keywords)");
+            const oldTableHasStatTypeId = oldColumns.some(col => col.name === 'stat_type_id');
+
             execute("ALTER TABLE filter_keywords RENAME TO filter_keywords_old");
             execute(`
                 CREATE TABLE filter_keywords (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     keyword TEXT NOT NULL UNIQUE,
                     type BOOLEAN NOT NULL CHECK(type IN (0, 1)),
-                    is_regex BOOLEAN NOT NULL DEFAULT 0,
-                    stat_type_id INTEGER,
-                    FOREIGN KEY (stat_type_id) REFERENCES keyword_stat_types(id) ON DELETE SET NULL
+                    is_regex BOOLEAN NOT NULL DEFAULT 0
                 )
             `);
-            execute("INSERT INTO filter_keywords (id, keyword, type, is_regex, stat_type_id) SELECT id, keyword, CASE WHEN type = 'positive' THEN 1 ELSE 0 END, is_regex, stat_type_id FROM filter_keywords_old");
+
+            // Вставляем данные, учитывая, есть ли в старой таблице колонка stat_type_id
+            const selectColumns = oldTableHasStatTypeId
+                ? "id, keyword, CASE WHEN type = 'positive' THEN 1 ELSE 0 END, is_regex, stat_type_id"
+                : "id, keyword, CASE WHEN type = 'positive' THEN 1 ELSE 0 END, is_regex";
+            const insertColumns = oldTableHasStatTypeId ? "id, keyword, type, is_regex, stat_type_id" : "id, keyword, type, is_regex";
+
+            execute(`INSERT INTO filter_keywords (${insertColumns}) SELECT ${selectColumns} FROM filter_keywords_old`);
             execute("DROP TABLE filter_keywords_old");
         })();
         console.log("'type' column migrated successfully.");
