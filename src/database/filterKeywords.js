@@ -174,7 +174,7 @@ export const initializeFilterKeywordsDatabase = () => {
         })(['blue', 'green', 'alert']);
     }
 
-    // Проверяем, существует ли колонка stat_type_id в таблице filter_keywords
+    // Проверяем, существует ли колонка stat_type_id в таблице filter_keywords +++++++++++++++++++++++++++++
     const columns = query("PRAGMA table_info(filter_keywords)");
     const hasStatTypeIdColumn = columns.some(col => col.name === 'stat_type_id');
 
@@ -189,6 +189,8 @@ export const initializeFilterKeywordsDatabase = () => {
         console.log("Updating existing positive keywords with 'alert' stat type...");
         execute("UPDATE filter_keywords SET stat_type_id = ? WHERE type = 'positive'", [alertTypeId]);
     }
+
+    //------------------------------------------------------------------------------------------------------
 
     const keywordCount = getOne(
         "SELECT COUNT(*) as count FROM filter_keywords"
