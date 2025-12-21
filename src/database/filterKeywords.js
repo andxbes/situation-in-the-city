@@ -148,13 +148,47 @@ const INITIAL_KEYWORDS = [
 
 export const initializeFilterKeywordsDatabase = () => {
     execute(`
+        CREATE TABLE IF NOT EXISTS keyword_stat_types (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE
+        )
+    `);
+
+    execute(`
         CREATE TABLE IF NOT EXISTS filter_keywords (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             keyword TEXT NOT NULL UNIQUE,
             type TEXT NOT NULL CHECK(type IN ('positive', 'negative')),
-            is_regex BOOLEAN NOT NULL DEFAULT 0
+            is_regex BOOLEAN NOT NULL DEFAULT 0,
+            stat_type_id INTEGER,
+            FOREIGN KEY (stat_type_id) REFERENCES keyword_stat_types(id) ON DELETE SET NULL
         )
     `);
+
+    // Заполняем типы статистики, если их нет
+    const statTypeCount = getOne("SELECT COUNT(*) as count FROM keyword_stat_types")?.count;
+    if (statTypeCount === 0) {
+        const insert = db.prepare("INSERT INTO keyword_stat_types (name) VALUES (?)");
+        db.transaction((types) => {
+            types.forEach(type => insert.run(type));
+        })(['blue', 'green', 'alert']);
+    }
+
+    // Проверяем, существует ли колонка stat_type_id в таблице filter_keywords
+    const columns = query("PRAGMA table_info(filter_keywords)");
+    const hasStatTypeIdColumn = columns.some(col => col.name === 'stat_type_id');
+
+    if (!hasStatTypeIdColumn) {
+        console.log("Adding 'stat_type_id' column to 'filter_keywords' table...");
+        execute(`
+            ALTER TABLE filter_keywords
+            ADD COLUMN stat_type_id INTEGER
+            REFERENCES keyword_stat_types(id) ON DELETE SET NULL
+        `);
+        const alertTypeId = getOne("SELECT id FROM keyword_stat_types WHERE name = 'alert'")?.id;
+        console.log("Updating existing positive keywords with 'alert' stat type...");
+        execute("UPDATE filter_keywords SET stat_type_id = ? WHERE type = 'positive'", [alertTypeId]);
+    }
 
     const keywordCount = getOne(
         "SELECT COUNT(*) as count FROM filter_keywords"
@@ -163,14 +197,17 @@ export const initializeFilterKeywordsDatabase = () => {
     if (keywordCount === 0) {
         console.log("Populating filter_keywords table with initial data...");
 
+        const alertTypeId = getOne("SELECT id FROM keyword_stat_types WHERE name = 'alert'")?.id;
+
         const insert = db.prepare(
-            "INSERT INTO filter_keywords (keyword, type, is_regex) VALUES (?, ?, ?)"
+            "INSERT INTO filter_keywords (keyword, type, is_regex, stat_type_id) VALUES (?, ?, ?, ?)"
         );
 
         const insertMany = db.transaction((items) => {
             for (const item of items) {
                 try {
-                    insert.run(item.keyword, item.type, Number(item.is_regex));
+                    const stat_type_id = item.type === 'positive' ? alertTypeId : null;
+                    insert.run(item.keyword, item.type, Number(item.is_regex), stat_type_id);
                 } catch (error) {
                     // Игнорируем ошибки уникальности, если в исходных данных есть дубликаты
                     if (!error.message.includes("UNIQUE constraint failed")) {
@@ -238,14 +275,14 @@ export const getAllFilterKeywords = () => {
  * @param {{keyword: string, type: string, is_regex: number}} data
  * @returns {import('better-sqlite3').RunResult}
  */
-export const addFilterKeyword = ({ keyword, type, is_regex = 0 }) => {
+export const addFilterKeyword = ({ keyword, type, is_regex = 0, stat_type_id = null }) => {
     if (!keyword || !type) {
         throw new Error("Keyword and type are required.");
     }
     try {
         return execute(
-            "INSERT INTO filter_keywords (keyword, type, is_regex) VALUES (?, ?, ?)",
-            [keyword.trim(), type, is_regex]
+            "INSERT INTO filter_keywords (keyword, type, is_regex, stat_type_id) VALUES (?, ?, ?, ?)",
+            [keyword.trim(), type, is_regex, stat_type_id]
         );
     } catch (error) {
         if (error.message.includes("UNIQUE constraint failed")) {
