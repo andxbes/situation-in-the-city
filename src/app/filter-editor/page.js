@@ -175,7 +175,7 @@ function FilterEditorPage() {
                             </div>
                         </div>
                     </header>
-                    <main ref={mainContainerRef} className="custom-scrollbar flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800 container w-full">
+                    <div ref={mainContainerRef} className="custom-scrollbar flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800 container w-full">
                         {loading && <div className="text-center">Загрузка...</div>}
                         {error && <div className="text-center text-red-500">Ошибка: {error}</div>}
                         {!loading && !error && (
@@ -195,7 +195,7 @@ function FilterEditorPage() {
                                 ))}
                             </div>
                         )}
-                    </main>
+                    </div>
                 </div>
 
                 {/* Keywords Column */}
@@ -214,6 +214,7 @@ function FilterEditorPage() {
                                 <tr>
                                     <th scope="col" className="px-2 py-2 w-12 text-center">Удал.</th>
                                     <th scope="col" className="px-4 py-2">Ключевое слово</th>
+                                    <th scope="col" className="px-2 py-2">Тип стат.</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -233,7 +234,7 @@ function FilterEditorPage() {
                                         <td className="px-2 py-2 align-middle">
                                             <button
                                                 onClick={() => setEditingKeyword(kw)}
-                                                className={`px-3 py-1 text-sm font-mono rounded-full w-full inline-block ${kw.type === 'positive'
+                                                className={`px-3 py-1 text-sm font-mono rounded-full max-w-36 w-full inline-block ${kw.type === 'positive'
                                                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                                     : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                                                     }`}
@@ -241,6 +242,9 @@ function FilterEditorPage() {
                                             >
                                                 {kw.keyword}
                                             </button>
+                                        </td>
+                                        <td className="px-2 py-2 align-middle text-xs text-gray-500 dark:text-gray-400">
+                                            {kw.stat_type_name}
                                         </td>
                                     </tr>
                                 ))}

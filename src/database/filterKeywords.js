@@ -192,8 +192,8 @@ const runFilterKeywordsMigrations = () => {
         db.transaction(() => {
             execute('ALTER TABLE filter_keywords ADD COLUMN stat_type_id INTEGER REFERENCES keyword_stat_types(id) ON DELETE SET NULL');
             const alertTypeId = getOne("SELECT id FROM keyword_stat_types WHERE name = 'alert'")?.id;
-            execute("UPDATE filter_keywords SET stat_type_id = ? WHERE type = 1", [alertTypeId]);
-            console.log("Column 'stat_type_id' added and populated for positive keywords.");
+            execute("UPDATE filter_keywords SET stat_type_id = ?", [alertTypeId]);
+            console.log("Column 'stat_type_id' added and populated for  keywords.");
             migrationsRun = true;
         })();
     }
@@ -319,7 +319,16 @@ export const getFilterKeywords = () => {
  */
 export const getAllFilterKeywords = () => {
     return query(
-        "SELECT id, keyword, CASE type WHEN 1 THEN 'positive' ELSE 'negative' END as type, is_regex, stat_type_id FROM filter_keywords ORDER BY type, keyword"
+        `SELECT
+            kw.id,
+            kw.keyword,
+            CASE kw.type WHEN 1 THEN 'positive' ELSE 'negative' END as type,
+            kw.is_regex,
+            kw.stat_type_id,
+            kst.name as stat_type_name
+         FROM filter_keywords kw
+         LEFT JOIN keyword_stat_types kst ON kw.stat_type_id = kst.id
+         ORDER BY kw.type, kw.keyword`
     );
 };
 
