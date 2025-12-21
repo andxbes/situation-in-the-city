@@ -34,11 +34,15 @@ const HighlightedMessage = ({ text, keywords }) => {
             map.set(kw.keyword.toLowerCase(), kw);
 
             if (kw.is_regex) {
-                parts.regex.push(kw.keyword);
+                // Replace single backslashes with double backslashes for RegExp constructor
+                parts.regex.push(kw.keyword.replace(/\\/g, '\\\\'));
             } else if (isWordLike(kw.keyword)) {
-                parts.word.push(escapeRegex(kw.keyword));
+                // Escape special regex characters, then escape backslashes for the RegExp constructor.
+                // This prevents errors if a keyword contains a backslash (e.g., "C:\").
+                parts.word.push(escapeRegex(kw.keyword).replace(/\\/g, '\\\\'));
             } else {
-                parts.symbol.push(escapeRegex(kw.keyword));
+                // Same logic as for words.
+                parts.symbol.push(escapeRegex(kw.keyword).replace(/\\/g, '\\\\'));
             }
         }
 
@@ -98,4 +102,3 @@ const HighlightedMessage = ({ text, keywords }) => {
 };
 
 export default React.memo(HighlightedMessage);
-
