@@ -261,3 +261,7 @@ export const deleteFilterKeyword = (id) => {
     if (!id) throw new Error("ID is required to delete a keyword.");
     return execute("DELETE FROM filter_keywords WHERE id = ?", [id]);
 };
+
+
+// Инициализируем таблицу с ключевыми словами для фильтрации
+initializeFilterKeywordsDatabase();

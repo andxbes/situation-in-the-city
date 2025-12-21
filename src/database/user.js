@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
 import { execute, getOne, query } from './db';
-import { initializeFilterKeywordsDatabase } from './filterKeywords';
 
 
 export async function addUser(data) {
@@ -56,9 +55,6 @@ export const initializeDatabase = async () => {
       role TEXT NOT NULL DEFAULT 'user'
     )
   `);
-
-    // Инициализируем таблицу с ключевыми словами для фильтрации
-    initializeFilterKeywordsDatabase();
 
     // Проверяем, есть ли администраторы
     const adminCount = getOne('SELECT COUNT(*) as count FROM users WHERE role = ?', ['admin'])?.count;
