@@ -1,0 +1,21 @@
+#!/data/data/com.termux/files/usr/bin/sh
+termux-wake-lock
+sshd
+
+# --- Запуск Next.js в Ubuntu через proot-distro ---
+proot-distro login ubuntu -- bash -c "
+export NVM_DIR=\"\$HOME/.nvm\"; # Убедитесь, что NVM_DIR установлен
+[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"; # Загружаем nvm
+[ -s \"\$NVM_DIR/bash_completion\" ] && \\. \"\$NVM_DIR/bash_completion\"; >
+nvm use --lts; # Активируем LTS-версию Node.js
+
+cd ~/situation-in-the-city && \
+    while ! git pull; do \
+        echo 'git pull failed, retrying in 30 seconds...'; \
+        sleep 30; \
+    done && \
+    echo 'git pull successful, continuing...' && \
+    npm i && \
+    npm run build && \
+    npm run start;
+"
