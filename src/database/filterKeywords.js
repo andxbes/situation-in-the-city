@@ -196,7 +196,7 @@ export const initializeFilterKeywordsDatabase = () => {
         const insert = db.prepare("INSERT INTO keyword_stat_types (name) VALUES (?)");
         db.transaction((types) => {
             types.forEach(type => insert.run(type));
-        })(['blue', 'green', 'alert']);
+        })(['blue', 'green']);
     }
 
     // Запускаем миграции для существующих таблиц
@@ -209,8 +209,6 @@ export const initializeFilterKeywordsDatabase = () => {
     if (keywordCount === 0) {
         console.log("Populating filter_keywords table with initial data...");
 
-        const alertTypeId = getOne("SELECT id FROM keyword_stat_types WHERE name = 'alert'")?.id;
-
         const insert = db.prepare(
             "INSERT INTO filter_keywords (keyword, type, is_regex, stat_type_id) VALUES (?, ?, ?, ?)"
         );
@@ -219,8 +217,7 @@ export const initializeFilterKeywordsDatabase = () => {
             for (const item of items) {
                 try {
                     const isPositive = item.type === 'positive';
-                    const stat_type_id = isPositive ? alertTypeId : null;
-                    insert.run(item.keyword, Number(isPositive), Number(item.is_regex), stat_type_id);
+                    insert.run(item.keyword, Number(isPositive), Number(item.is_regex), null);
                 } catch (error) {
                     // Игнорируем ошибки уникальности, если в исходных данных есть дубликаты
                     if (!error.message.includes("UNIQUE constraint failed")) {
@@ -314,17 +311,11 @@ export const addFilterKeyword = ({ keyword, type, is_regex = 0, stat_type_id = n
         throw new Error("Keyword and type are required.");
     }
     const isPositiveType = type === 'positive';
-    let final_stat_type_id = stat_type_id;
-
-    // Если  stat_type_id не указан, устанавливаем 'alert' по умолчанию
-    if (final_stat_type_id === null || final_stat_type_id === '') {
-        final_stat_type_id = getOne("SELECT id FROM keyword_stat_types WHERE name = 'alert'")?.id;
-    }
 
     try {
         return execute(
             "INSERT INTO filter_keywords (keyword, type, is_regex, stat_type_id) VALUES (?, ?, ?, ?)",
-            [keyword.trim(), Number(isPositiveType), is_regex, final_stat_type_id]
+            [keyword.trim(), Number(isPositiveType), is_regex, stat_type_id]
         );
     } catch (error) {
         if (error.message.includes("UNIQUE constraint failed")) {
@@ -351,17 +342,11 @@ export const updateFilterKeyword = ({ id, keyword, type, is_regex, stat_type_id 
         throw new Error("ID, keyword, and type are required for update.");
     }
     const isPositiveType = type === 'positive';
-    let final_stat_type_id = stat_type_id;
 
-    // Если тип положительный и stat_type_id не указан (например, при смене с negative на positive),
-    // устанавливаем 'alert' по умолчанию.
-    if (final_stat_type_id === null || final_stat_type_id === '') {
-        final_stat_type_id = getOne("SELECT id FROM keyword_stat_types WHERE name = 'alert'")?.id;
-    }
     try {
         return execute(
             "UPDATE filter_keywords SET keyword = ?, type = ?, is_regex = ?, stat_type_id = ? WHERE id = ?",
-            [keyword.trim(), Number(isPositiveType), is_regex, final_stat_type_id, id]
+            [keyword.trim(), Number(isPositiveType), is_regex, stat_type_id, id]
         );
     } catch (error) {
         if (error.message.includes("UNIQUE constraint failed")) {
