@@ -59,7 +59,7 @@ export default function KeywordEditorModal({ keyword, statTypes, onSave, onClose
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <label htmlFor="keyword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Ключевое слово</label>
-                        <input type="text" name="keyword" id="keyword" value={formData.keyword} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm" required />
+                        <input type="text" name="keyword" id="keyword" value={formData.keyword} onChange={handleChange} className="mt-1 px-3.5 py-2.5 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm" required />
                     </div>
 
                     <div className="mb-4">
@@ -78,7 +78,7 @@ export default function KeywordEditorModal({ keyword, statTypes, onSave, onClose
 
                     <div className="mb-4">
                         <label htmlFor="stat_type_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Stat Type ID</label>
-                        <select name="stat_type_id" id="stat_type_id" value={formData.stat_type_id} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                        <select name="stat_type_id" id="stat_type_id" value={formData.stat_type_id} onChange={handleChange} className="mt-1 px-3.5 py-2.5 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
                             <option value="">(пусто)</option>
                             {statTypes.map(type => (
                                 <option key={type.id} value={type.id}>

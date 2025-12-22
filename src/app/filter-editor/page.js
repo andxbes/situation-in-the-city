@@ -201,31 +201,47 @@ function FilterEditorPage() {
 
                 {/* Keywords Column */}
                 <div className="flex-shrink-0 lg:w-[40%] flex flex-col">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold text-gray-800 dark:text-white">Ключевые слова</h2>
-                        <button
-                            onClick={openNewKeywordModal}
-                            className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
-                            Добавить
-                        </button>
+                    <div className="flex flex-wrap gap-2.5 justify-between items-center mb-4">
                         <Link
                             href="/filter-editor/stat-types"
                             className="px-3 py-1 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">
                             Типы статистики
                         </Link>
+                        <button
+                            onClick={openNewKeywordModal}
+                            className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
+                            Добавить
+                        </button>
+
+                        <h2 className="text-xl w-full font-bold text-gray-800 dark:text-white">Ключевые слова</h2>
                     </div>
                     <div className="custom-scrollbar flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800">
                         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                 <tr>
-                                    <th scope="col" className="px-2 py-2 w-12 text-center">Удал.</th>
-                                    <th scope="col" className="px-4 py-2">Ключевое слово</th>
                                     <th scope="col" className="px-2 py-2">Тип стат.</th>
+                                    <th scope="col" className="px-4 py-2">Ключевое слово</th>
+                                    <th scope="col" className="px-2 py-2 w-12 text-center">Удал.</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {keywords.map(kw => (
                                     <tr key={kw.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                        <td className="px-2 py-2 align-middle text-xs text-gray-500 dark:text-gray-400">
+                                            {kw.stat_type_name}
+                                        </td>
+                                        <td className="px-2 py-2 align-middle">
+                                            <button
+                                                onClick={() => setEditingKeyword(kw)}
+                                                className={`px-3 py-1 overflow-hidden text-sm font-mono rounded-full max-w-36 w-full inline-block ${kw.type === 'positive'
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                    }`}
+                                                title={`Тип: ${kw.type}${kw.is_regex ? ' (Регулярное выражение)' : ''}`}
+                                            >
+                                                {kw.keyword}
+                                            </button>
+                                        </td>
                                         <td className="px-2 py-2 text-center align-middle">
                                             <button
                                                 onClick={() => handleDeleteKeyword(kw.id)}
@@ -236,21 +252,6 @@ function FilterEditorPage() {
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
                                             </button>
-                                        </td>
-                                        <td className="px-2 py-2 align-middle">
-                                            <button
-                                                onClick={() => setEditingKeyword(kw)}
-                                                className={`px-3 py-1 text-sm font-mono rounded-full max-w-36 w-full inline-block ${kw.type === 'positive'
-                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                                    }`}
-                                                title={`Тип: ${kw.type}${kw.is_regex ? ' (Регулярное выражение)' : ''}`}
-                                            >
-                                                {kw.keyword}
-                                            </button>
-                                        </td>
-                                        <td className="px-2 py-2 align-middle text-xs text-gray-500 dark:text-gray-400">
-                                            {kw.stat_type_name}
                                         </td>
                                     </tr>
                                 ))}
