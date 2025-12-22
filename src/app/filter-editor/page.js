@@ -84,18 +84,17 @@ function FilterEditorPage() {
     }, [fetchKeywords]);
 
     const handleMouseUp = (e) => {
-        const selectedText = window.getSelection().toString().trim();
-        if (selectedText) {
+        const selection = window.getSelection();
+        const selectedText = selection.toString().trim();
+
+        // Показываем меню, только если текст выделен внутри контейнера сообщений
+        if (selectedText && mainContainerRef.current && mainContainerRef.current.contains(selection.anchorNode)) {
             setSelection({
                 show: true,
                 text: selectedText,
                 x: e.pageX,
                 y: e.pageY,
             });
-        } else {
-            if (!e.target.closest('.messages')) {
-                setSelection({ show: false, text: '', x: 0, y: 0 });
-            }
         }
     };
 
@@ -143,7 +142,7 @@ function FilterEditorPage() {
     };
 
     return (
-        <div className="bg-gray-100 dark:bg-gray-900 container mx-auto w-full" onMouseUp={handleMouseUp}>
+        <div className="bg-gray-100 dark:bg-gray-900 container mx-auto w-full">
             {editingKeyword && <KeywordEditorModal keyword={editingKeyword} statTypes={statTypes} onSave={handleSaveKeyword} onClose={() => setEditingKeyword(null)} />}
             <SelectionMenu selection={selection} onAddKeyword={handleAddKeywordFromSelection} onClose={() => setSelection({ show: false })} />
             <div className=" p-4 flex flex-col lg:flex-row gap-4 lg:h-screen w-full">
@@ -176,7 +175,7 @@ function FilterEditorPage() {
                             </div>
                         </div>
                     </header>
-                    <div ref={mainContainerRef} className="custom-scrollbar messages flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800 container w-full">
+                    <div ref={mainContainerRef} onMouseUp={handleMouseUp} className="custom-scrollbar messages flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800 container w-full">
                         {loading && <div className="text-center">Загрузка...</div>}
                         {error && <div className="text-center text-red-500">Ошибка: {error}</div>}
                         {!loading && !error && (
