@@ -3,11 +3,6 @@ import { authOptions } from '../auth/[...nextauth]';
 import { getKeywordStatTypes, addKeywordStatType, deleteKeywordStatType, updateKeywordStatType } from '@/database/filterKeywords';
 
 export default async function handler(req, res) {
-    const session = await getServerSession(req, res, authOptions);
-
-    if (session?.user?.role !== 'admin') {
-        return res.status(403).json({ message: 'Forbidden' });
-    }
 
     if (req.method === 'GET') {
         try {
@@ -17,6 +12,12 @@ export default async function handler(req, res) {
             console.error('API Error fetching keyword stat types:', error);
             return res.status(500).json({ message: 'Internal Server Error' });
         }
+    }
+
+    const session = await getServerSession(req, res, authOptions);
+
+    if (session?.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Forbidden' });
     }
 
     if (req.method === 'POST') {
