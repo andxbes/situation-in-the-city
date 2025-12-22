@@ -156,12 +156,12 @@ const INITIAL_KEYWORDS = [
 const runFilterKeywordsMigrations = () => {
     let migrationsRun = false;
 
-    // Миграция: установить stat_type_id = NULL там, где он был равен 3
-    const result = execute("UPDATE filter_keywords SET stat_type_id = NULL WHERE stat_type_id = 3");
-    if (result.changes > 0) {
-        console.log(`Migration run: ${result.changes} rows updated where stat_type_id was 3.`);
-        migrationsRun = true;
-    }
+    // // Миграция: установить stat_type_id = NULL там, где он был равен 3
+    // const result = execute("UPDATE filter_keywords SET stat_type_id = NULL WHERE stat_type_id = 3");
+    // if (result.changes > 0) {
+    //     console.log(`Migration run: ${result.changes} rows updated where stat_type_id was 3.`);
+    //     migrationsRun = true;
+    // }
 
     // Если были выполнены миграции, оптимизируем файл базы данных
     if (migrationsRun) {

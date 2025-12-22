@@ -93,7 +93,7 @@ function FilterEditorPage() {
                 y: e.pageY,
             });
         } else {
-            if (!e.target.closest('.dark\\:bg-gray-700')) {
+            if (!e.target.closest('.messages')) {
                 setSelection({ show: false, text: '', x: 0, y: 0 });
             }
         }
@@ -176,7 +176,7 @@ function FilterEditorPage() {
                             </div>
                         </div>
                     </header>
-                    <div ref={mainContainerRef} className="custom-scrollbar flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800 container w-full">
+                    <div ref={mainContainerRef} className="custom-scrollbar messages flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800 container w-full">
                         {loading && <div className="text-center">Загрузка...</div>}
                         {error && <div className="text-center text-red-500">Ошибка: {error}</div>}
                         {!loading && !error && (
