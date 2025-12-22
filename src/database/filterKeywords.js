@@ -1,4 +1,4 @@
-import db, { query, execute, getOne } from "./db";
+import db, { query, execute, getOne } from './db';
 
 // Эти ключевые слова будут добавлены в базу данных при первой инициализации.
 const INITIAL_KEYWORDS = [
@@ -175,9 +175,22 @@ export const initializeFilterKeywordsDatabase = () => {
     execute(`
         CREATE TABLE IF NOT EXISTS keyword_stat_types (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL UNIQUE
+            name TEXT NOT NULL UNIQUE,
+            color TEXT DEFAULT '#cccccc'
         )
     `);
+
+    // Миграция: Добавляем колонку 'color', если она отсутствует
+    try {
+        const columns = query("PRAGMA table_info(keyword_stat_types)");
+        const hasColorColumn = columns.some(col => col.name === 'color');
+        if (!hasColorColumn) {
+            execute("ALTER TABLE keyword_stat_types ADD COLUMN color TEXT DEFAULT '#cccccc'");
+            console.log("Migration run: Added 'color' column to 'keyword_stat_types' table.");
+        }
+    } catch (e) {
+        console.error("Could not run migration for 'keyword_stat_types':", e);
+    }
 
     execute(`
         CREATE TABLE IF NOT EXISTS filter_keywords (
@@ -193,10 +206,13 @@ export const initializeFilterKeywordsDatabase = () => {
     // Заполняем типы статистики, если их нет
     const statTypeCount = getOne("SELECT COUNT(*) as count FROM keyword_stat_types")?.count;
     if (statTypeCount === 0) {
-        const insert = db.prepare("INSERT INTO keyword_stat_types (name) VALUES (?)");
+        const insert = db.prepare("INSERT INTO keyword_stat_types (name, color) VALUES (?, ?)");
         db.transaction((types) => {
-            types.forEach(type => insert.run(type));
-        })(['blue', 'green']);
+            types.forEach(type => insert.run(type.name, type.color));
+        })([
+            { name: 'blue', color: '#3b82f6' },
+            { name: 'green', color: '#22c55e' }
+        ]);
     }
 
     // Запускаем миграции для существующих таблиц
@@ -299,7 +315,7 @@ export const getAllFilterKeywords = () => {
  * @returns {Array<{id: number, name: string}>}
  */
 export const getKeywordStatTypes = () => {
-    return query("SELECT id, name FROM keyword_stat_types ORDER BY name");
+    return query("SELECT id, name, color FROM keyword_stat_types ORDER BY name");
 };
 
 /**
@@ -307,14 +323,14 @@ export const getKeywordStatTypes = () => {
  * @param {string} name
  * @returns {import('better-sqlite3').RunResult}
  */
-export const addKeywordStatType = (name) => {
+export const addKeywordStatType = (name, color) => {
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
         throw new Error("Stat type name is required and must be a non-empty string.");
     }
     try {
         return execute(
-            "INSERT INTO keyword_stat_types (name) VALUES (?)",
-            [name.trim()]
+            "INSERT INTO keyword_stat_types (name, color) VALUES (?, ?)",
+            [name.trim(), color]
         );
     } catch (error) {
         if (error.message.includes("UNIQUE constraint failed")) {
@@ -331,14 +347,14 @@ export const addKeywordStatType = (name) => {
  * @param {{id: number, name: string}} data
  * @returns {import('better-sqlite3').RunResult}
  */
-export const updateKeywordStatType = ({ id, name }) => {
+export const updateKeywordStatType = ({ id, name, color }) => {
     if (!id || !name || typeof name !== 'string' || name.trim().length === 0) {
         throw new Error("ID and a non-empty name are required for update.");
     }
     try {
         return execute(
-            "UPDATE keyword_stat_types SET name = ? WHERE id = ?",
-            [name.trim(), id]
+            "UPDATE keyword_stat_types SET name = ?, color = ? WHERE id = ?",
+            [name.trim(), color, id]
         );
     } catch (error) {
         if (error.message.includes("UNIQUE constraint failed")) {

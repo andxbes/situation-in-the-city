@@ -21,11 +21,11 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
         try {
-            const { name } = req.body;
+            const { name, color } = req.body;
             if (!name) {
                 return res.status(400).json({ message: 'Name is required.' });
             }
-            const result = addKeywordStatType(name);
+            const result = addKeywordStatType(name, color);
             return res.status(201).json({ message: 'Stat type added successfully', id: result.lastInsertRowid });
         } catch (error) {
             if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
@@ -38,11 +38,11 @@ export default async function handler(req, res) {
 
     if (req.method === 'PUT') {
         try {
-            const { id, name } = req.body;
+            const { id, name, color } = req.body;
             if (!id || !name) {
                 return res.status(400).json({ message: 'ID and name are required.' });
             }
-            const result = updateKeywordStatType({ id, name });
+            const result = updateKeywordStatType({ id, name, color });
             if (result.changes === 0) {
                 return res.status(404).json({ message: 'Stat type not found.' });
             }
