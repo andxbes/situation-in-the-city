@@ -301,6 +301,59 @@ export const getAllFilterKeywords = () => {
 export const getKeywordStatTypes = () => {
     return query("SELECT id, name FROM keyword_stat_types ORDER BY name");
 };
+
+/**
+ * Добавляет новый тип статистики для ключевых слов.
+ * @param {string} name
+ * @returns {import('better-sqlite3').RunResult}
+ */
+export const addKeywordStatType = (name) => {
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+        throw new Error("Stat type name is required and must be a non-empty string.");
+    }
+    try {
+        return execute(
+            "INSERT INTO keyword_stat_types (name) VALUES (?)",
+            [name.trim()]
+        );
+    } catch (error) {
+        if (error.message.includes("UNIQUE constraint failed")) {
+            const err = new Error(`Stat type "${name}" already exists.`);
+            err.code = "SQLITE_CONSTRAINT_UNIQUE";
+            throw err;
+        }
+        throw error;
+    }
+};
+
+/**
+ * Обновляет существующий тип статистики.
+ * @param {{id: number, name: string}} data
+ * @returns {import('better-sqlite3').RunResult}
+ */
+export const updateKeywordStatType = ({ id, name }) => {
+    if (!id || !name || typeof name !== 'string' || name.trim().length === 0) {
+        throw new Error("ID and a non-empty name are required for update.");
+    }
+    try {
+        return execute(
+            "UPDATE keyword_stat_types SET name = ? WHERE id = ?",
+            [name.trim(), id]
+        );
+    } catch (error) {
+        if (error.message.includes("UNIQUE constraint failed")) {
+            const err = new Error(`Stat type "${name}" already exists.`);
+            err.code = "SQLITE_CONSTRAINT_UNIQUE";
+            throw err;
+        }
+        throw error;
+    }
+};
+
+export const deleteKeywordStatType = (id) => {
+    if (!id) throw new Error("ID is required to delete a stat type.");
+    return execute("DELETE FROM keyword_stat_types WHERE id = ?", [id]);
+};
 /**
  * Добавляет новое ключевое слово в базу данных.
  * @param {{keyword: string, type: string, is_regex: number}} data

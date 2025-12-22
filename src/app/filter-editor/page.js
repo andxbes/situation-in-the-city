@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import withRoleAuth from '../components/ProtectedRoute';
 import KeywordEditorModal from '../components/filter-editor/KeywordEditorModal';
 import HighlightedMessage from '../components/filter-editor/HighlightedMessage';
@@ -207,6 +208,11 @@ function FilterEditorPage() {
                             className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
                             Добавить
                         </button>
+                        <Link
+                            href="/filter-editor/stat-types"
+                            className="px-3 py-1 bg-purple-500 text-white rounded-md hover:bg-purple-600 text-sm">
+                            Типы статистики
+                        </Link>
                     </div>
                     <div className="custom-scrollbar flex-1 overflow-y-auto rounded-lg bg-white p-4 shadow-inner dark:bg-gray-800">
                         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
