@@ -139,7 +139,10 @@ const INITIAL_KEYWORDS = [
     ].map((k) => ({ keyword: k, type: "negative", is_regex: 0 })),
 
     // Negative Regex
-    ...["потому[\\s]что", "перед[\\s]тем"].map((k) => ({
+    ...[
+        "потому[\\s]что",
+        "перед[\\s]тем"
+    ].map((k) => ({
         keyword: k,
         type: "negative",
         is_regex: 1,
