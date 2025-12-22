@@ -154,59 +154,13 @@ const INITIAL_KEYWORDS = [
  * Эту функцию можно будет удалить в будущем, когда база данных стабилизируется.
  */
 const runFilterKeywordsMigrations = () => {
-    // Проверяем, существует ли таблица, чтобы избежать ошибок на первой инициализации
-    const tableExists = getOne("SELECT name FROM sqlite_master WHERE type='table' AND name='filter_keywords'");
-    if (!tableExists) {
-        return; // Миграции не нужны, если таблицы еще нет
-    }
-
     let migrationsRun = false;
-    let columns = query("PRAGMA table_info(filter_keywords)");
 
-    // Миграция 1: Изменение типа колонки 'type' с TEXT на BOOLEAN
-    const typeColumn = columns.find(col => col.name === 'type');
-    if (typeColumn && typeColumn.type === 'TEXT') {
-        console.log("Migrating 'filter_keywords.type' column from TEXT to BOOLEAN...");
-        db.transaction(() => {
-            const oldColumns = query("PRAGMA table_info(filter_keywords)");
-            const oldTableHasStatTypeId = oldColumns.some(col => col.name === 'stat_type_id');
-
-            execute("ALTER TABLE filter_keywords RENAME TO filter_keywords_old");
-            execute(`
-                CREATE TABLE filter_keywords (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    keyword TEXT NOT NULL UNIQUE,
-                    type BOOLEAN NOT NULL CHECK(type IN (0, 1)),
-                    is_regex BOOLEAN NOT NULL DEFAULT 0
-                )
-            `);
-
-            // Вставляем данные, учитывая, есть ли в старой таблице колонка stat_type_id
-            const selectColumns = oldTableHasStatTypeId
-                ? "id, keyword, CASE WHEN type = 'positive' THEN 1 ELSE 0 END, is_regex, stat_type_id"
-                : "id, keyword, CASE WHEN type = 'positive' THEN 1 ELSE 0 END, is_regex";
-            const insertColumns = oldTableHasStatTypeId ? "id, keyword, type, is_regex, stat_type_id" : "id, keyword, type, is_regex";
-
-            execute(`INSERT INTO filter_keywords (${insertColumns}) SELECT ${selectColumns} FROM filter_keywords_old`);
-            execute("DROP TABLE filter_keywords_old");
-        })();
-        console.log("'type' column migrated successfully.");
-        // После миграции структура таблицы изменилась, нужно перечитать информацию о колонках
-        columns = query("PRAGMA table_info(filter_keywords)");
+    // Миграция: установить stat_type_id = NULL там, где он был равен 3
+    const result = execute("UPDATE filter_keywords SET stat_type_id = NULL WHERE stat_type_id = 3");
+    if (result.changes > 0) {
+        console.log(`Migration run: ${result.changes} rows updated where stat_type_id was 3.`);
         migrationsRun = true;
-    }
-
-    // Миграция 2: Добавление колонки 'stat_type_id'
-    const hasStatTypeIdColumn = columns.some(col => col.name === 'stat_type_id');
-    if (!hasStatTypeIdColumn) {
-        console.log("Adding 'stat_type_id' column to 'filter_keywords' table...");
-        db.transaction(() => {
-            execute('ALTER TABLE filter_keywords ADD COLUMN stat_type_id INTEGER REFERENCES keyword_stat_types(id) ON DELETE SET NULL');
-            const alertTypeId = getOne("SELECT id FROM keyword_stat_types WHERE name = 'alert'")?.id;
-            execute("UPDATE filter_keywords SET stat_type_id = ?", [alertTypeId]);
-            console.log("Column 'stat_type_id' added and populated for  keywords.");
-            migrationsRun = true;
-        })();
     }
 
     // Если были выполнены миграции, оптимизируем файл базы данных
