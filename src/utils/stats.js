@@ -15,56 +15,51 @@ function escapeRegExp(str) {
  * @returns {{hourly: Object, daily: Object}} - Объект со статистикой по часам и за весь день.
  */
 export function calculateKeywordStats(messages, statKeywords) {
-    // Инициализируем структуру для хранения статистики
-    const hourlyStats = Array.from({ length: 24 }, () => ({}));
-    const dailyStats = {};
-
     // Получаем уникальные типы статистики (например, 'blue', 'green')
     const statTypes = [...new Set(statKeywords.map(kw => kw.stat_type_name))];
 
-    // Инициализируем счетчики для каждого типа статистики
-    statTypes.forEach(type => {
-        dailyStats[type] = 0;
-        hourlyStats.forEach(hourStat => {
-            hourStat[type] = 0;
-        });
-    });
+    // 1. Инициализация
+    const initialCounters = {};
+    statTypes.forEach(type => (initialCounters[type] = 0));
+    const hourlyStats = Array.from({ length: 24 }, () => ({ ...initialCounters }));
+    const dailyStats = { ...initialCounters };
+
+    // 2. Оптимизация: Группируем ключевые слова по типу статистики и создаем одно большое регулярное выражение
+    const statTypeRegexMap = new Map();
+    for (const type of statTypes) {
+        const patterns = statKeywords
+            .filter(kw => kw.stat_type_name === type)
+            .map(kw => (kw.is_regex ? kw.keyword : escapeRegExp(kw.keyword)));
+
+        if (patterns.length > 0) {
+            // Создаем одно большое регулярное выражение для каждого типа
+            const combinedRegex = new RegExp(patterns.join('|'), 'i');
+            statTypeRegexMap.set(type, combinedRegex);
+        }
+    }
 
     // Обрабатываем каждое сообщение
     for (const message of messages) {
-        // Используем Set, чтобы считать каждое сообщение с определенным типом статистики только один раз
-        const foundStatTypesForMessage = new Set();
+        if (!message.message) continue;
 
-        // Проверяем наличие каждого ключевого слова в сообщении
-        for (const keyword of statKeywords) {
-            // Пропускаем, если этот тип статистики уже был найден в данном сообщении
-            if (foundStatTypesForMessage.has(keyword.stat_type_name)) {
-                continue;
-            }
+        let messageHasMatches = false;
+        const hour = message.date.getHours();
 
-            const pattern = keyword.is_regex ? keyword.keyword : escapeRegExp(keyword.keyword);
-
-            // Создаем регулярное выражение для поиска (без учета регистра)
-            // Оборачиваем в try-catch на случай невалидного регулярного выражения из БД
-            try {
-                const regex = new RegExp(pattern, 'i');
-
-                if (regex.test(message.message)) {
-                    foundStatTypesForMessage.add(keyword.stat_type_name);
-                }
-            } catch (e) {
-                console.error(`Invalid regex pattern for keyword "${keyword.keyword}":`, e);
+        // 3. Оптимизация: Проверяем каждое сообщение только один раз для каждого типа статистики
+        for (const [statType, regex] of statTypeRegexMap.entries()) {
+            if (regex.test(message.message)) {
+                hourlyStats[hour][statType]++;
+                messageHasMatches = true;
             }
         }
 
-        // Если в сообщении найдены статистические ключевые слова, обновляем счетчики
-        if (foundStatTypesForMessage.size > 0) {
-            const hour = message.date.getHours();
-
-            foundStatTypesForMessage.forEach(statType => {
-                hourlyStats[hour][statType]++; // hourlyStats[hour] уже инициализирован
-                dailyStats[statType]++;
-            });
+        // Обновляем дневную статистику, если было хотя бы одно совпадение в сообщении
+        if (messageHasMatches) {
+            for (const [statType, regex] of statTypeRegexMap.entries()) {
+                if (regex.test(message.message)) {
+                    dailyStats[statType]++;
+                }
+            }
         }
     }
 
