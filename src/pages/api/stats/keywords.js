@@ -1,22 +1,22 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
-import { getStatKeywords } from '@/database/filterKeywords';
+import { getStatKeywords, getKeywordStatTypes } from '@/database/filterKeywords';
 import { calculateKeywordStats } from '@/utils/stats';
 import { getMessagesForPeriod } from '@/tg/tclient';
 
 export default async function handler(req, res) {
-    const session = await getServerSession(req, res, authOptions);
+    // const session = await getServerSession(req, res, authOptions);
 
-    // Доступ к статистике разрешен для всех авторизованных пользователей
-    if (!session) {
-        return res.status(401).json({ message: 'Unauthorized' });
-    }
+    // // Доступ к статистике разрешен для всех авторизованных пользователей
+    // if (!session) {
+    //     return res.status(401).json({ message: 'Unauthorized' });
+    // }
 
     if (req.method === 'GET') {
         try {
             // Получаем ключевые слова, которые используются для статистики
             const statKeywords = getStatKeywords();
-            if (statKeywords.length === 0) {
+            if (!statKeywords || statKeywords.length === 0) {
                 return res.status(200).json({ hourly: Array.from({ length: 24 }, () => ({})), daily: {} });
             }
 
@@ -36,7 +36,12 @@ export default async function handler(req, res) {
             // Рассчитываем статистику
             const stats = calculateKeywordStats(messages, statKeywords);
 
-            return res.status(200).json(stats);
+            // Получаем метаданные для типов статистики (цвета)
+            const statTypesMeta = getKeywordStatTypes();
+
+            // Возвращаем всё в одном ответе
+            return res.status(200).json({ ...stats, meta: { statTypes: statTypesMeta } });
+
         } catch (error) {
             console.error('API Error fetching keyword stats:', error);
             return res.status(500).json({ message: 'Internal Server Error' });
