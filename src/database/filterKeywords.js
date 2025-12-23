@@ -311,6 +311,22 @@ export const getAllFilterKeywords = () => {
 };
 
 /**
+ * Получает все ключевые слова, у которых задан тип статистики.
+ * @returns {Array<Object>}
+ */
+export const getStatKeywords = () => {
+    return query(
+        `SELECT
+            kw.keyword,
+            kw.is_regex,
+            kst.name as stat_type_name
+         FROM filter_keywords kw
+         JOIN keyword_stat_types kst ON kw.stat_type_id = kst.id
+         WHERE kw.stat_type_id IS NOT NULL`
+    );
+};
+
+/**
  * Получает все типы статистики для ключевых слов.
  * @returns {Array<{id: number, name: string}>}
  */
