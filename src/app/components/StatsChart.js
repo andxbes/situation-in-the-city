@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // SWR требует функцию-фетчер, которая будет выполнять запросы
 const fetcher = url => fetch(url).then(res => res.json());
@@ -35,16 +35,16 @@ const StatsChart = () => {
     });
 
     return (
-        <div style={{ width: '100%', height: 600 }}>
+        <div style={{ width: '100%', height: 400 }}>
             <h3>Активность по часам (обновляется каждую минуту)</h3>
             <ResponsiveContainer>
-                <BarChart
+                <LineChart
                     data={chartData}
                     margin={{
-                        top: 5,
+                        top: 10,
                         right: 30,
-                        left: 20,
-                        bottom: 5,
+                        left: 0,
+                        bottom: 0,
                     }}
                 >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -52,22 +52,25 @@ const StatsChart = () => {
                     <YAxis allowDecimals={false} />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: '#333',
-                            borderColor: '#555',
-                            borderRadius: '5px'
+                            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                            borderColor: 'rgba(51, 65, 85, 0.9)',
+                            borderRadius: '10px'
                         }}
                         labelStyle={{ color: '#fff' }}
                     />
                     <Legend />
                     {statTypes.map(type => (
-                        <Bar
+                        <Line
+                            type="monotone"
                             key={type}
                             dataKey={type}
-                            fill={colorMap[type] || '#8884d8'}
+                            stroke={colorMap[type] || '#8884d8'}
+                            strokeWidth={2}
+                            dot={false}
                             name={type.charAt(0).toUpperCase() + type.slice(1)} // Делаем имя красивее
                         />
                     ))}
-                </BarChart>
+                </LineChart>
             </ResponsiveContainer>
         </div>
     );
