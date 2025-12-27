@@ -35,9 +35,16 @@ const StatsChart = () => {
     });
 
     return (
-        <div style={{ width: '100%', height: 400 }}>
-            <h3>Активность по часам (обновляется каждую минуту)</h3>
-            <ResponsiveContainer>
+        <div style={{ width: '100%', minHeight: 400 }}>
+            <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold">Активность по часам</h3>
+                {data.meta?.dateNowFormat && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Обновлено: {data.meta.dateNowFormat} (обновляется каждую минуту)
+                    </p>
+                )}
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
                 <LineChart
                     data={chartData}
                     margin={{
