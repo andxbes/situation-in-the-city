@@ -40,9 +40,9 @@ function debounce(func, waitTime) {
     };
 }
 
-function getformatDateTime(unixTimestamp) {
-    const date = new Date(unixTimestamp * 1000);
 
+function getformatDateTime(timestamp) {
+    const date = new Date(timestamp);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Месяцы начинаются с 0, поэтому добавляем 1
     const day = String(date.getDate()).padStart(2, '0');
@@ -55,12 +55,17 @@ function getformatDateTime(unixTimestamp) {
 }
 
 function getformatTime(unixTimestamp) {
-    const date = new Date(unixTimestamp * 1000);
+    const date = new Date(unixTimestamp);
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     // const seconds = String(date.getSeconds()).padStart(2, '0');
 
     return `${hours}:${minutes}`;
+}
+
+function getformatTimeFromUnixTimesStamp(unixTimestamp) {
+    const date = new Date(unixTimestamp * 1000);
+    return getformatTime(date);
 }
 
 
@@ -174,4 +179,4 @@ function filter_messages(messages) {
 }
 
 
-export { getformatDateTime, getformatTime, filter_messages, debounce };
+export { getformatDateTime, getformatTime, getformatTimeFromUnixTimesStamp, filter_messages, debounce };

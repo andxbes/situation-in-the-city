@@ -3,6 +3,7 @@ import { authOptions } from '../auth/[...nextauth]';
 import { getStatKeywords, getKeywordStatTypes } from '@/database/filterKeywords';
 import { calculateKeywordStats } from '@/utils/stats';
 import { getMessagesForPeriod } from '@/tg/tclient';
+import { getformatDateTime } from '@/utils/utils';
 
 export default async function handler(req, res) {
     // const session = await getServerSession(req, res, authOptions);
@@ -19,9 +20,10 @@ export default async function handler(req, res) {
             if (!statKeywords || statKeywords.length === 0) {
                 return res.status(200).json({ hourly: Array.from({ length: 24 }, () => ({})), daily: {} });
             }
-
+            const dateNow = Date.now();
+            const dateNowFormat = getformatDateTime(dateNow);
             // Определяем время, за которое нужно получить сообщения (последние 24 часа)
-            const fromTime = Math.floor(Date.now() / 1000) - (24 * 3600);
+            const fromTime = Math.floor(dateNow / 1000) - (24 * 3600);
 
             // Получаем сообщения
             const rawMessages = await getMessagesForPeriod(fromTime);
@@ -40,7 +42,7 @@ export default async function handler(req, res) {
             const statTypesMeta = getKeywordStatTypes();
 
             // Возвращаем всё в одном ответе
-            return res.status(200).json({ ...stats, meta: { statTypes: statTypesMeta } });
+            return res.status(200).json({ ...stats, meta: { statTypes: statTypesMeta, dateNowFormat } });
 
         } catch (error) {
             console.error('API Error fetching keyword stats:', error);

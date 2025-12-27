@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { getMessagesForPeriod } from "../../../tg/tclient";
-import { getformatTime } from "../../../utils/utils";
+import { getformatTimeFromUnixTimesStamp } from "../../../utils/utils";
 
 export default async function handler(req, res) {
     const session = await getServerSession(req, res, authOptions);
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
                         replyTo = {
                             id: replyMsg.id,
                             message: replyMsg.message,
-                            date: getformatTime(replyMsg.date),
+                            date: getformatTimeFromUnixTimesStamp(replyMsg.date),
                         };
                     }
                 }
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
                 return {
                     id: msg.id,
                     message: msg.message,
-                    date: getformatTime(msg.date),
+                    date: getformatTimeFromUnixTimesStamp(msg.date),
                     replyTo: replyTo,
                 };
             });
