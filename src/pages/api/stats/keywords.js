@@ -21,9 +21,12 @@ export default async function handler(req, res) {
                 return res.status(200).json({ hourly: Array.from({ length: 24 }, () => ({})), daily: {} });
             }
             const dateNow = Date.now();
-            const dateNowFormat = getformatDateTime(dateNow);
-            // Определяем время, за которое нужно получить сообщения (последние 24 часа)
-            const fromTime = Math.floor(dateNow / 1000) - (24 * 3600);
+            const dateNowFormat = `${getformatDateTime(dateNow)} UTC`;
+
+            // Определяем начало текущего дня в UTC
+            const now = new Date();
+            const startOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+            const fromTime = Math.floor(startOfDayUTC.getTime() / 1000);
 
             // Получаем сообщения
             const rawMessages = await getMessagesForPeriod(fromTime);
