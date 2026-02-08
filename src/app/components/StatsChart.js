@@ -2,33 +2,33 @@ import useSWR from 'swr';
 import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-// SWR требует функцию-фетчер, которая будет выполнять запросы
+// SWR вимагає функцію-фетчер, яка виконуватиме запити
 const fetcher = url => fetch(url).then(res => res.json());
 
 const StatsChart = () => {
-    // Состояние для выбранной даты, по умолчанию сегодня (YYYY-MM-DD)
+    // Стан для обраної дати за замовчуванням сьогодні (YYYY-MM-DD)
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-    // Используем SWR для получения данных.
-    // Ключ зависит от даты, поэтому при смене даты данные обновятся.
+    // Використовуємо SWR для отримання даних. 
+    // Ключ залежить від дати, тому за зміни дати дані оновляться.
     const { data, error } = useSWR(`/api/stats/keywords?date=${selectedDate}`, fetcher);
 
-    if (error) return <div>Не удалось загрузить статистику.</div>;
-    if (!data) return <div>Загрузка...</div>;
+    if (error) return <div>Неможливо завантажити статистику.</div>;
+    if (!data) return <div>Завантаження...</div>;
 
     // Получаем список ID типов статистики из данных
     const statTypeIds = Object.keys(data.daily || {});
     if (statTypeIds.length === 0) {
-        return <div>Нет данных для отображения.</div>;
+        return <div>Немає даних для відображення.</div>;
     }
 
-    // Создаем карты для быстрого доступа к имени и цвету по ID
+    // Створюємо карти для швидкого доступу до імені та кольору за ID
     const metaMap = (data.meta?.statTypes || []).reduce((acc, type) => {
         acc[type.id] = { name: type.name, color: type.color };
         return acc;
     }, {});
 
-    // Преобразуем почасовые данные для графика
+    // Перетворимо погодинні дані для графіка
     const chartData = data.hourly.map((hourData, index) => {
         return {
             hour: `${index}:00`,
@@ -39,7 +39,7 @@ const StatsChart = () => {
     return (
         <div style={{ width: '100%', minHeight: 400 }}>
             <div className="flex justify-between items-center mb-2 flex-col md:flex-row gap-2">
-                <h3 className="text-lg font-semibold">Активность по часам</h3>
+                <h3 className="text-lg font-semibold">Активність щогодини</h3>
                 <div className="flex items-center gap-2">
                     <input
                         type="date"
@@ -49,7 +49,7 @@ const StatsChart = () => {
                     />
                     {data.meta?.dateNowFormat && (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Данные за: {data.meta.dateNowFormat}
+                            Дані за: {data.meta.dateNowFormat}
                         </p>
                     )}
                 </div>
@@ -90,7 +90,7 @@ const StatsChart = () => {
                 </LineChart>
             </ResponsiveContainer>
 
-            <p className='p-4 text-md text-gray-500 dark:text-gray-400'>Статистика за каждый полный час, если смотрим 9 часов , то это количество за интервал времени от 9 до 10</p>
+            <p className='p-4 text-md text-gray-500 dark:text-gray-400'>Статистика за кожну повну годину, якщо дивимося 9 годин, то ця кількість за інтервал часу від 9 до 10</p>
         </div>
     );
 };
