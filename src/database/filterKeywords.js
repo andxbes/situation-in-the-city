@@ -319,7 +319,8 @@ export const getStatKeywords = () => {
         `SELECT
             kw.keyword,
             kw.is_regex,
-            kst.name as stat_type_name
+            kst.name as stat_type_name,
+            kst.id as stat_type_id
          FROM filter_keywords kw
          JOIN keyword_stat_types kst ON kw.stat_type_id = kst.id
          WHERE kw.stat_type_id IS NOT NULL`

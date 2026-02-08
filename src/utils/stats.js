@@ -15,26 +15,26 @@ function escapeRegExp(str) {
  * @returns {{hourly: Object, daily: Object}} - Объект со статистикой по часам и за весь день.
  */
 export function calculateKeywordStats(messages, statKeywords) {
-    // Получаем уникальные типы статистики (например, 'blue', 'green')
-    const statTypes = [...new Set(statKeywords.map(kw => kw.stat_type_name))];
+    // Получаем уникальные ID типов статистики
+    const statTypeIds = [...new Set(statKeywords.map(kw => kw.stat_type_id))];
 
     // 1. Инициализация
     const initialCounters = {};
-    statTypes.forEach(type => (initialCounters[type] = 0));
+    statTypeIds.forEach(id => (initialCounters[id] = 0));
     const hourlyStats = Array.from({ length: 24 }, () => ({ ...initialCounters }));
     const dailyStats = { ...initialCounters };
 
-    // 2. Оптимизация: Группируем ключевые слова по типу статистики и создаем одно большое регулярное выражение
+    // 2. Оптимизация: Группируем ключевые слова по ID типа статистики и создаем одно большое регулярное выражение
     const statTypeRegexMap = new Map();
-    for (const type of statTypes) {
+    for (const id of statTypeIds) {
         const patterns = statKeywords
-            .filter(kw => kw.stat_type_name === type)
+            .filter(kw => kw.stat_type_id === id)
             .map(kw => (kw.is_regex ? kw.keyword : escapeRegExp(kw.keyword)));
 
         if (patterns.length > 0) {
             // Создаем одно большое регулярное выражение для каждого типа
             const combinedRegex = new RegExp(patterns.join('|'), 'i');
-            statTypeRegexMap.set(type, combinedRegex);
+            statTypeRegexMap.set(id, combinedRegex);
         }
     }
 
@@ -45,19 +45,19 @@ export function calculateKeywordStats(messages, statKeywords) {
         let messageHasMatches = false;
         const hour = message.date.getHours();
 
-        // 3. Оптимизация: Проверяем каждое сообщение только один раз для каждого типа статистики
-        for (const [statType, regex] of statTypeRegexMap.entries()) {
+        // 3. Оптимизация: Проверяем каждое сообщение только один раз для каждого ID типа статистики
+        for (const [statTypeId, regex] of statTypeRegexMap.entries()) {
             if (regex.test(message.message)) {
-                hourlyStats[hour][statType]++;
+                hourlyStats[hour][statTypeId]++;
                 messageHasMatches = true;
             }
         }
 
         // Обновляем дневную статистику, если было хотя бы одно совпадение в сообщении
         if (messageHasMatches) {
-            for (const [statType, regex] of statTypeRegexMap.entries()) {
+            for (const [statTypeId, regex] of statTypeRegexMap.entries()) {
                 if (regex.test(message.message)) {
-                    dailyStats[statType]++;
+                    dailyStats[statTypeId]++;
                 }
             }
         }
