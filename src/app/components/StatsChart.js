@@ -38,7 +38,7 @@ const StatsChart = () => {
 
     return (
         <div style={{ width: '100%', minHeight: 400 }}>
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-2 flex-col md:flex-row gap-2">
                 <h3 className="text-lg font-semibold">Активность по часам</h3>
                 <div className="flex items-center gap-2">
                     <input
@@ -89,6 +89,8 @@ const StatsChart = () => {
                     ))}
                 </LineChart>
             </ResponsiveContainer>
+
+            <p className='p-4 text-md text-gray-500 dark:text-gray-400'>Статистика за каждый полный час, если смотрим 9 часов , то это количество за интервал времени от 9 до 10</p>
         </div>
     );
 };
