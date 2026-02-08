@@ -1,4 +1,3 @@
-'use server'
 // database/db.js
 import Database from 'better-sqlite3';
 import logger from '@/utils/logger';
