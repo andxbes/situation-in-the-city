@@ -2,6 +2,7 @@ import { getStatKeywords } from '@/database/filterKeywords';
 import { calculateKeywordStats } from '@/utils/stats';
 import { getMessagesForPeriod } from '@/tg/tclient';
 import { saveHourlyStats, getStatsForDate } from '@/database/stats';
+import logger from '@/utils/logger';
 
 async function processHourStats(startOfHour) {
     try {
@@ -24,14 +25,14 @@ async function processHourStats(startOfHour) {
 
         // Сохраняем
         await saveHourlyStats(statsForHour, startOfHour);
-        console.log(`[Scheduler] Saved stats for ${startOfHour.toISOString()}`);
+        logger.log(`[Scheduler] Saved stats for ${startOfHour.toISOString()}`);
     } catch (error) {
-        console.error(`[Scheduler] Error processing ${startOfHour.toISOString()}:`, error);
+        logger.error(`[Scheduler] Error processing ${startOfHour.toISOString()}:`, error);
     }
 }
 
 async function runHourlyStats() {
-    console.log('[Scheduler] Starting hourly stats aggregation...');
+    logger.log('[Scheduler] Starting hourly stats aggregation...');
     const now = new Date();
     // Определяем предыдущий час (за который считаем статистику), используя локальное время
     const endOfHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 0, 0, 0);
@@ -50,7 +51,7 @@ async function checkAndFillDailyStats() {
         const currentHour = now.getHours();
         const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 
-        console.log(`[Scheduler] Checking for missing stats for ${dateStr} (00:00 - ${currentHour}:00)...`);
+        logger.log(`[Scheduler] Checking for missing stats for ${dateStr} (00:00 - ${currentHour}:00)...`);
 
         for (let i = 0; i < currentHour; i++) {
             // Проверяем, есть ли данные за этот час.
@@ -58,13 +59,13 @@ async function checkAndFillDailyStats() {
             const hasData = stats.hourly[i] && Object.keys(stats.hourly[i]).length > 0;
 
             if (!hasData) {
-                console.log(`[Scheduler] Missing stats for hour ${i}:00. Backfilling...`);
+                logger.log(`[Scheduler] Missing stats for hour ${i}:00. Backfilling...`);
                 const hourTime = new Date(startOfDay.getTime() + i * 60 * 60 * 1000);
                 await processHourStats(hourTime);
             }
         }
     } catch (error) {
-        console.error('[Scheduler] Backfill error:', error);
+        logger.error('[Scheduler] Backfill error:', error);
     }
 }
 
@@ -82,7 +83,7 @@ export function startScheduler() {
     nextHour.setHours(now.getHours() + 1, 0, 0, 0);
     const delay = nextHour.getTime() - now.getTime();
 
-    console.log(`[Scheduler] Initialized. First run in ${Math.round(delay / 1000)} seconds.`);
+    logger.log(`[Scheduler] Initialized. First run in ${Math.round(delay / 1000)} seconds.`);
 
     // Проверяем пропущенную статистику при запуске
     checkAndFillDailyStats();

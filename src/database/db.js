@@ -15,7 +15,7 @@ function initializeDatabase() {
         const hasTypeColumn = tableInfo.some(col => col.name === 'type');
 
         if (hasTypeColumn) {
-            logger.error('Detected old schema for keyword_stats. Dropping table to recreate with stat_type_id...');
+            logger.log('Detected old schema for keyword_stats. Dropping table to recreate with stat_type_id...');
             db.exec("DROP TABLE keyword_stats");
         }
 
@@ -33,10 +33,10 @@ function initializeDatabase() {
         // Очистка от некорректных данных (если случайно записались строки вместо ID в предыдущей версии)
         const hasBadData = db.prepare("SELECT 1 FROM keyword_stats WHERE typeof(stat_type_id) = 'text' LIMIT 1").get();
         if (hasBadData) {
-            logger.error('Cleaning up invalid data (text types) in keyword_stats...');
+            logger.log('Cleaning up invalid data (text types) in keyword_stats...');
             db.exec("DELETE FROM keyword_stats WHERE typeof(stat_type_id) = 'text'");
         }
-        logger.error('Database initialized: `keyword_stats` table is ready.');
+        logger.log('Database initialized: `keyword_stats` table is ready.');
     } catch (error) {
         logger.error('Failed to initialize database:', { error });
         throw error; // Прерываем выполнение, если не удалось инициализировать БД
