@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 
 export default function MatrixBackground({ color = '#0F0' }) {
     const canvasRef = useRef(null);
-    const [canvasDimensions, setCanvasDimensions] = useState({ width: 0, height: 0 });
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -15,11 +14,13 @@ export default function MatrixBackground({ color = '#0F0' }) {
             return;
         }
 
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        let isDark = mediaQuery.matches;
+
         // Function to set canvas dimensions
         const setDimensions = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            setCanvasDimensions({ width: canvas.width, height: canvas.height });
         };
 
         // Set initial dimensions
@@ -40,8 +41,8 @@ export default function MatrixBackground({ color = '#0F0' }) {
         let animationFrameId;
 
         const draw = () => {
-            // Semi-transparent black rectangle to fade out old characters
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            // Use a semi-transparent fill to create the fading trail effect
+            ctx.fillStyle = isDark ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.fillStyle = color;
@@ -64,6 +65,12 @@ export default function MatrixBackground({ color = '#0F0' }) {
             animationFrameId = requestAnimationFrame(draw);
         };
 
+        // Listener for theme changes
+        const handleThemeChange = (e) => {
+            isDark = e.matches;
+        };
+        mediaQuery.addEventListener('change', handleThemeChange);
+
         // Start the animation
         draw();
 
@@ -71,14 +78,14 @@ export default function MatrixBackground({ color = '#0F0' }) {
         return () => {
             cancelAnimationFrame(animationFrameId);
             window.removeEventListener('resize', setDimensions);
+            mediaQuery.removeEventListener('change', handleThemeChange);
         };
-    }, []); // Empty dependency array means this effect runs once on mount
+    }, [color]);
 
     return (
         <canvas
             ref={canvasRef}
-            className="absolute inset-0 w-full h-full z-0" // Tailwind classes for full screen and layering
-            style={{ backgroundColor: 'black' }} // Fallback background color
+            className="absolute inset-0 w-full h-full z-0 bg-white dark:bg-black" // Tailwind classes for full screen and layering
         ></canvas>
     );
 };
