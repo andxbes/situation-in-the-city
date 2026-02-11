@@ -48,7 +48,7 @@ const StatsChart = () => {
                         className="border rounded px-2 py-1 text-sm text-black dark:text-white bg-transparent"
                     />
                     {data.meta?.dateNowFormat && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-gray-900 dark:text-gray-400">
                             Дані за: {data.meta.dateNowFormat}
                         </p>
                     )}
@@ -90,7 +90,7 @@ const StatsChart = () => {
                 </LineChart>
             </ResponsiveContainer>
 
-            <p className='p-4 text-md text-gray-500 dark:text-gray-400'>Статистика за кожну повну годину, якщо дивимося 9 годин, то ця кількість за інтервал часу від 9 до 10</p>
+            <p className='p-4 text-md text-gray-900 dark:text-gray-400'>Статистика за кожну повну годину, якщо дивимося 9 годин, то ця кількість за інтервал часу від 9 до 10</p>
         </div>
     );
 };
