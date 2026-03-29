@@ -23,7 +23,7 @@ const SnowfallBackground = () => {
         () => ({
             background: {
                 color: {
-                    value: "#000000",
+                    value: "transparent",
                 },
             },
             fpsLimit: 60,
@@ -73,7 +73,7 @@ const SnowfallBackground = () => {
     );
 
     if (init) {
-        return <Particles id="snowfall" particlesLoaded={particlesLoaded} options={options} className="absolute top-0 left-0 w-full h-full -z-20" />;
+        return <Particles id="snowfall" particlesLoaded={particlesLoaded} options={options} className="absolute top-0 left-0 w-full h-full -z-20 bg-blue-700 dark:bg-black" />;
     }
 
     return <></>;
