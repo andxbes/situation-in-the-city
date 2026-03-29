@@ -53,3 +53,19 @@ export async function getStatsForDate(dateStr) {
 
     return { hourly, daily };
 }
+
+/**
+ * Получает агрегированную статистику по дням за указанный период.
+ * @param {string} start - Дата начала в формате 'YYYY-MM-DD'
+ * @param {string} end - Дата окончания в формате 'YYYY-MM-DD'
+ */
+export async function getStatsForRange(start, end) {
+    const sql = `
+        SELECT stat_type_id, SUM(count) as total, DATE(created_at, 'localtime') as day
+        FROM keyword_stats 
+        WHERE DATE(created_at, 'localtime') BETWEEN ? AND ?
+        GROUP BY day, stat_type_id
+        ORDER BY day ASC
+    `;
+    return query(sql, [start, end]);
+}
